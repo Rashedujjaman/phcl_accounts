@@ -17,7 +17,7 @@ class _MainNavigationState extends State<MainNavigation> {
   final List<Widget> _screens = [
     const DashboardPage(),
     const TransactionsPage(),
-    const SettingsPage(),
+    SettingsPage(),
   ];
 
   void _onItemTapped(int index) {

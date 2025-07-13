@@ -35,17 +35,17 @@ class DashboardPage extends StatelessWidget {
 
 class AdminDashboard extends StatelessWidget {
   final Map<String, dynamic> userData;
-  int netBalance = 0;
-  int totalIn = 0;
-  int totalOut = 0;
+  final int netBalance = 0;
+  final int totalIn = 0;
+  final int totalOut = 0;
 
-  AdminDashboard({super.key, required this.userData});
+  const AdminDashboard({super.key, required this.userData});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Dashboard'),
+        title: Text('PHCL Account'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -116,20 +116,6 @@ class AdminDashboard extends StatelessWidget {
                 const Text('View Report', style: TextStyle(),)
               ],
               ),
-            ),
-  
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/user-management');
-              },
-              child: const Text('Manage Users'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/transactions');
-              },
-              child: const Text('View All Transactions'),
             ),
           ],)
         ),

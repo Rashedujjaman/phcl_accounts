@@ -32,9 +32,14 @@ class UserManagementPage extends StatelessWidget {
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.pushNamed(context, '/register');
+        },
+        child: const Icon(Icons.add),
+      ),
     );
   }
-
   void _showEditUserDialog(BuildContext context, DocumentSnapshot user) {
     final roleController = TextEditingController(text: user['role']);
 

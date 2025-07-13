@@ -65,12 +65,6 @@ class RegisterPage extends StatelessWidget {
                   },
                   child: const Text('Register'),
                 ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                  child: const Text('Already have an account? Login'),
-                ),
               ],
             );
           },

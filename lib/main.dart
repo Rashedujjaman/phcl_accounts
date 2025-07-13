@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:phcl_accounts/core/widgets/main_navigation.dart';
+import 'package:phcl_accounts/features/admin/presentation/pages/user_management_page.dart';
 import 'package:phcl_accounts/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_in.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_up.dart';
@@ -52,6 +53,7 @@ class MyApp extends StatelessWidget {
             '/login': (context) => LoginPage(),
             '/register': (context) => RegisterPage(),
             '/main-navigation': (context) => const MainNavigation(),
+            '/user-management': (context) => const UserManagementPage(),
           },
         ),
       ),
