@@ -7,23 +7,23 @@ import 'package:phcl_accounts/features/transactions/domain/repositories/transact
 import 'package:fluttertoast/fluttertoast.dart';
 
 
-class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+class AddTransactionPage extends StatefulWidget {
+  const AddTransactionPage({super.key});
 
   @override
-  State<AddTransactionScreen> createState() => _AddTransactionScreenState();
+  State<AddTransactionPage> createState() => _AddTransactionScreenState();
 }
 
-class _AddTransactionScreenState extends State<AddTransactionScreen> {
+class _AddTransactionScreenState extends State<AddTransactionPage> {
   final _formKey = GlobalKey<FormState>();
   File? _attachment;
-  String _transactionType = 'expense';
+  final String _transactionType = 'expense';
   final _categoryController = TextEditingController();
   final _clientIdController = TextEditingController();
   final _amountController = TextEditingController();
   final _contactNoController = TextEditingController();
   final _descriptionController = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
+  final DateTime _selectedDate = DateTime.now();
 
   Future<void> _pickAttachment() async {
     final result = await FilePicker.platform.pickFiles(

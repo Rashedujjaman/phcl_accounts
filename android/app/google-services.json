@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "842191352330",
+    "project_id": "phcl-accounts",
+    "storage_bucket": "phcl-accounts.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:842191352330:android:1217270fa640653b5125f3",
+        "android_client_info": {
+          "package_name": "com.example.phcl_accounts"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJVPAdQmfPwCoRhKS_xgKuPbu6vhCitSU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
