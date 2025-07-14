@@ -64,10 +64,13 @@ class _TransactionsPageState extends State<TransactionsPage> {
       appBar: AppBar(title: const Text('Transactions')),
       body: Column(
         children: [
+          // Date Range Selector
           DateRangeSelector(
             initialRange: _dateRange,
             onChanged: _onDateRangeChanged,
           ),
+          
+          // Transaction Type Filter
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -92,6 +95,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
               ],
             ),
           ),
+          
+          // Transaction List
           Expanded(
             child: BlocBuilder<TransactionBloc, TransactionState>(
               builder: (context, state) {
@@ -155,8 +160,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
     );
   }
 
-  void _showTransactionDetails(
-      BuildContext context, TransactionEntity transaction) {
+  void _showTransactionDetails(BuildContext context, TransactionEntity transaction) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

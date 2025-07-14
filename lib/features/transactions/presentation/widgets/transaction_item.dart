@@ -30,7 +30,7 @@ class TransactionItem extends StatelessWidget {
           DateFormat('MMM dd, yyyy').format(transaction.date),
         ),
         trailing: Text(
-          NumberFormat.currency(symbol: '₹').format(transaction.amount),
+          NumberFormat.currency(symbol: '৳').format(transaction.amount),
           style: TextStyle(
             color: color,
             fontWeight: FontWeight.bold,

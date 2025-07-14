@@ -61,15 +61,10 @@ class DateRangeSelector extends StatelessWidget {
     );
 
     if (picked != null) {
-      if (isStart) {
-        final newRange = DateTimeRange(start: picked, end: currentRange.end);
-        onChanged(newRange);
-      } else {
-        // Set end date to last second of the day
-        final endOfDay = DateTime(picked.year, picked.month, picked.day, 23, 59, 59, 999);
-        final newRange = DateTimeRange(start: currentRange.start, end: endOfDay);
-        onChanged(newRange);
-      }
+      final newRange = isStart
+          ? DateTimeRange(start: picked, end: currentRange.end)
+          : DateTimeRange(start: currentRange.start, end: DateTime(picked.year, picked.month, picked.day, 23, 59, 59, 999));
+      onChanged(newRange);
     }
   }
 
@@ -82,7 +77,11 @@ class DateRangeSelector extends StatelessWidget {
     );
 
     if (picked != null) {
-      onChanged(picked);
+      final adjustedRange = DateTimeRange(
+        start: DateTime(picked.start.year, picked.start.month, picked.start.day),
+        end: DateTime(picked.end.year, picked.end.month, picked.end.day, 23, 59, 59, 999),
+      );
+      onChanged(adjustedRange);
     }
   }
 }

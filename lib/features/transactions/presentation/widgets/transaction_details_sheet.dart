@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:phcl_accounts/core/widgets/attachment_viewer.dart';
 import 'package:phcl_accounts/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:phcl_accounts/features/transactions/presentation/pages/add_transaction_page.dart';
 
@@ -40,14 +41,23 @@ class TransactionDetailsSheet extends StatelessWidget {
             _buildDetailRow('Note', transaction.note!),
           if (transaction.attachmentUrl != null)
             Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Column(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Attachment', style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  // TODO: Implement attachment preview
-                  Image.network(transaction.attachmentUrl!),
+                  SizedBox(
+                    width: 100,
+                    child: Text(
+                      'Attachment',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(child: AttachmentViewer(
+                    url: transaction.attachmentUrl!, 
+                    fileName: '${transaction.category}_${transaction.id}_attachment'
+                  ),)
+
                 ],
               ),
             ),
