@@ -48,3 +48,30 @@ class TransactionError extends TransactionState {
   @override
   List<Object> get props => [message];
 }
+
+class AttachmentUploading extends TransactionState {
+  final double progress;
+
+  const AttachmentUploading(this.progress);
+
+  @override
+  List<Object> get props => [progress];
+}
+
+class AttachmentUploadSuccess extends TransactionState {
+  final String downloadUrl;
+
+  const AttachmentUploadSuccess(this.downloadUrl);
+
+  @override
+  List<Object> get props => [downloadUrl];
+}
+
+class AttachmentUploadFailure extends TransactionState {
+  final String error;
+
+  const AttachmentUploadFailure(this.error);
+
+  @override
+  List<Object> get props => [error];
+}

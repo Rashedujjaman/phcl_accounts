@@ -55,7 +55,8 @@ class TransactionDetailsSheet extends StatelessWidget {
                   const SizedBox(width: 16),
                   Expanded(child: AttachmentViewer(
                     url: transaction.attachmentUrl!, 
-                    fileName: '${transaction.category}_${transaction.id}_attachment'
+                    fileName: '${transaction.category}_${transaction.id}_attachment',
+                    fileType: transaction.attachmentType,
                   ),)
 
                 ],

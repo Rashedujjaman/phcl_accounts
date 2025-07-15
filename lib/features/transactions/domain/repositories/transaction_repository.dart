@@ -11,6 +11,6 @@ abstract class TransactionRepository {
   Future<void> updateTransaction(TransactionEntity transaction);
   Future<void> deleteTransaction(String id);
   Future<List<String>> getCategories({required String type});
-  Future<String> uploadAttachment(File file);
+  Future<Map<String, String>> uploadAttachment(File file, String type);
   Future<void> deleteAttachment(String url);
 }

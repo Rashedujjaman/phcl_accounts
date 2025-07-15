@@ -64,3 +64,22 @@ class DeleteTransaction extends TransactionEvent {
   @override
   List<Object> get props => [id];
 }
+
+class UploadAttachment extends TransactionEvent {
+  final String transactionType;
+  final XFile file;
+
+  const UploadAttachment(this.transactionType, this.file);
+
+  @override
+  List<Object> get props => [transactionType, file];
+}
+
+class AttachmentUploaded extends TransactionEvent {
+  final String downloadUrl;
+
+  const AttachmentUploaded(this.downloadUrl);
+
+  @override
+  List<Object> get props => [downloadUrl];
+}

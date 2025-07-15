@@ -10,6 +10,7 @@ class TransactionEntity {
   final String? contactNo;
   final String? note;
   final String? attachmentUrl;
+  final String? attachmentType;
   final String? createdBy;
   final String? updatedBy;
   final String? deletedBy;
@@ -25,6 +26,7 @@ class TransactionEntity {
     this.contactNo,
     this.note,
     this.attachmentUrl,
+    this.attachmentType,
     this.createdBy,
     this.updatedBy,
     this.deletedBy,
@@ -42,6 +44,7 @@ class TransactionEntity {
       'contactNo': contactNo,
       'note': note,
       'attachmentUrl': attachmentUrl,
+      'attachmentType': attachmentType,
       'createdBy': createdBy,
       'updatedBy': updatedBy,
       'deletedBy': deletedBy,
@@ -60,6 +63,7 @@ class TransactionEntity {
       contactNo: json['contactNo'],
       note: json['note'],
       attachmentUrl: json['attachmentUrl'],
+      attachmentType: json['attachmentType'],
       createdBy: json['createdBy'],
       updatedBy: json['updatedBy'],
       deletedBy: json['deletedBy'],
@@ -79,6 +83,7 @@ class TransactionEntity {
       contactNo: data['contactNo'],
       note: data['note'],
       attachmentUrl: data['attachmentUrl'],
+      attachmentType: data['attachmentType'],
       createdBy: data['createdBy'],
       updatedBy: data['updatedBy'],
       deletedBy: data['deletedBy'],

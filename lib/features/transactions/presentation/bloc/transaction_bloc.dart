@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:phcl_accounts/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:phcl_accounts/features/transactions/domain/repositories/transaction_repository.dart';
 
@@ -15,6 +17,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     on<UpdateTransaction>(_onUpdateTransaction);
     on<DeleteTransaction>(_onDeleteTransaction);
     on<LoadCategories>(_onLoadCategories);
+    on<UploadAttachment>(_onUploadAttachment);
+    on<AttachmentUploaded>(_onAttachmentUploaded);
   }
 
   Future<void> _onLoadTransactions(
@@ -98,4 +102,30 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     }
   }
 
+  Future<void> _onUploadAttachment(
+    UploadAttachment event,
+    Emitter<TransactionState> emit,
+  ) async {
+    emit(AttachmentUploading(0));
+    
+    try {
+      final file = File(event.file.path);
+      final type = event.transactionType;
+      
+      // Get the download URL
+      final result = await _repository.uploadAttachment(file, type);
+      
+      emit(AttachmentUploadSuccess(result['url']!));
+      add(AttachmentUploaded(result['url']!));
+    } catch (e) {
+      emit(AttachmentUploadFailure(e.toString()));
+    }
+  }
+
+  Future<void> _onAttachmentUploaded(
+    AttachmentUploaded event,
+    Emitter<TransactionState> emit,
+  ) async {
+    emit(TransactionSuccess('Attachment uploaded successfully: ${event.downloadUrl}'));
+  }
 }

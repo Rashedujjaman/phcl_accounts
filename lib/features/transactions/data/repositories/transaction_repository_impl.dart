@@ -34,6 +34,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
         'contactNo': transaction.contactNo,
         'note': transaction.note,
         'attachmentUrl': transaction.attachmentUrl,
+        'attachmentType': transaction.attachmentType,
         'createdBy': userId,
         'createdAt': FieldValue.serverTimestamp(),
         'isDeleted': false,
@@ -131,16 +132,29 @@ class TransactionRepositoryImpl implements TransactionRepository {
   }
 
   @override
-  Future<String> uploadAttachment(File file) async {
+  Future<Map<String, String>> uploadAttachment(File file, String type) async {
     try {
       final userId = _auth.currentUser?.uid;
+
+      // Get file extension
+      final extension = file.path.split('.').last.toLowerCase();
+      final validTypes = ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'];
+      if (!validTypes.contains(extension)) {
+        throw FirebaseFailure('Unsupported file type: $extension');
+      }
+
       if (userId == null) throw const FirebaseFailure('Unauthenticated');
 
-      final ref = _storage.ref().child('attachments/$userId/${file.path.split('/').last}');
+      final ref = _storage.ref().child('attachments/$type/${DateTime.now().millisecondsSinceEpoch}');
       final uploadTask = ref.putFile(file);
       final snapshot = await uploadTask;
 
-      return await snapshot.ref.getDownloadURL();
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+
+      return {
+        'url': downloadUrl,
+        'type': extension,
+      };
     } on FirebaseException catch (e) {
       throw FirebaseFailure.fromCode(e.code);
     } catch (e) {
@@ -159,5 +173,4 @@ class TransactionRepositoryImpl implements TransactionRepository {
       throw FirebaseFailure(e.toString());
     }
   }
-
 }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,6 +29,8 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   DateTime _selectedDate = DateTime.now();
   String? _selectedCategory;
   XFile? _attachment;
+  String? _attachmentUrl;
+  StreamSubscription? _uploadSubscription;
 
   @override
   void initState() {
@@ -47,7 +51,6 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
           child: Column(
             children: [
               _buildDatePicker(),
-              const SizedBox(height: 16),
               _buildCategoryDropdown(),
               const SizedBox(height: 16),
               _buildAmountField(),
@@ -64,6 +67,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
               _buildAttachmentPicker(),
               const SizedBox(height: 32),
               _buildSubmitButton(),
+              const SizedBox(height: 16),
             ],
           ),
         ),
@@ -213,7 +217,7 @@ Future<void> _pickAttachment(ImageSource? imageSource) async {
     } else {
       final pickedFile = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
         withData: true,
       );
       
@@ -351,28 +355,99 @@ Widget _buildAttachmentPreview() {
   );
 }
 
-  Widget _buildSubmitButton() {
-    return ElevatedButton(
-      onPressed: _submitForm,
-      child: const Text('Submit Transaction'),
-    );
-  }
+Widget _buildSubmitButton() {
+  return ElevatedButton(
+    onPressed: _submitForm,
+    style: ElevatedButton.styleFrom(
+      minimumSize: const Size(double.infinity, 48),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.primary,
+          width: 1.5,
+        ),
+      ),
+    ),
+    child: const Text('Submit Transaction'),
+  );
+}
 
-  void _submitForm() {
+  void _submitForm() async {
     if (_formKey.currentState!.validate()) {
-      final transaction = TransactionEntity(
-        type: widget.transactionType,
-        category: _selectedCategory!,
-        date: _selectedDate,
-        amount: double.parse(_amountController.text),
-        clientId: widget.transactionType == 'income' ? _clientIdController.text : null,
-        contactNo: _contactNoController.text.isNotEmpty ? _contactNoController.text : null,
-        note: _noteController.text.isNotEmpty ? _noteController.text : null,
-        // TODO: Handle attachment upload
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text('Processing transaction...'),
+            ],
+          ),
+        ),
       );
 
-      context.read<TransactionBloc>().add(AddTransaction(transaction: transaction));
-      Navigator.pop(context);
+      try {
+        // Upload attachment if exists
+        if (_attachment != null) {
+          _attachmentUrl = await _uploadAttachment();
+          if (_attachmentUrl == null) {
+            Navigator.pop(context); // Close loading dialog
+            return; // Upload failed
+          }
+        }
+
+        // Create transaction
+        final transaction = TransactionEntity(
+          type: widget.transactionType,
+          category: _selectedCategory!,
+          date: _selectedDate,
+          amount: double.parse(_amountController.text),
+          clientId: widget.transactionType == 'income' ? _clientIdController.text : null,
+          contactNo: _contactNoController.text.isNotEmpty ? _contactNoController.text : null,
+          note: _noteController.text.isNotEmpty ? _noteController.text : null,
+          attachmentUrl: _attachmentUrl,
+          attachmentType: _attachment?.name.split('.').last.toLowerCase(),
+        );
+
+        // Add transaction
+        context.read<TransactionBloc>().add(AddTransaction(transaction: transaction));
+        
+        Navigator.pop(context); // Close loading dialog
+        Navigator.pop(context); // Close the form
+      } catch (e) {
+        Navigator.pop(context); // Close loading dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: ${e.toString()}')),
+        );
+      }
+    }
+  }
+
+  Future<String?> _uploadAttachment() async {
+    final completer = Completer<String?>();
+    
+    _uploadSubscription = context.read<TransactionBloc>().stream.listen((state) {
+      if (state is AttachmentUploadSuccess) {
+        completer.complete(state.downloadUrl);
+      } else if (state is AttachmentUploadFailure) {
+        completer.completeError(state.error);
+      }
+    });
+
+    context.read<TransactionBloc>().add(UploadAttachment(widget.transactionType, _attachment!,
+    ));
+
+    try {
+      return await completer.future;
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to upload attachment: $e')),
+      );
+      return null;
     }
   }
 
@@ -382,6 +457,7 @@ Widget _buildAttachmentPreview() {
     _noteController.dispose();
     _clientIdController.dispose();
     _contactNoController.dispose();
+    _uploadSubscription?.cancel();
     super.dispose();
   }
 }

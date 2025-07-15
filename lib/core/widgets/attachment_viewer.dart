@@ -9,8 +9,9 @@ import 'package:flutter/services.dart' ;
 class AttachmentViewer extends StatefulWidget {
   final String url;
   final String? fileName;
+  final String? fileType;
 
-  const AttachmentViewer({super.key, required this.url, this.fileName});
+  const AttachmentViewer({super.key, required this.url, this.fileName, required this.fileType});
 
   @override
   State<AttachmentViewer> createState() => _AttachmentViewerState();
@@ -18,12 +19,13 @@ class AttachmentViewer extends StatefulWidget {
 
 class _AttachmentViewerState extends State<AttachmentViewer> {
   bool _isPdf = false;
+
   // bool _isDownloading = false;
 
   @override
   void initState() {
     super.initState();
-    _isPdf = widget.url.toLowerCase().endsWith('.pdf');
+    _isPdf = widget.fileType!.toLowerCase() == 'pdf';
   }
 
   // Future<void> _downloadAndOpenFile() async {
