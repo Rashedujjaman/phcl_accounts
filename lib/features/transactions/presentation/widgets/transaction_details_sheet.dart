@@ -29,7 +29,7 @@ class TransactionDetailsSheet extends StatelessWidget {
           const Divider(),
           _buildDetailRow('Type', transaction.type.capitalize(), color: color),
           _buildDetailRow('Amount', 
-              NumberFormat.currency(symbol: '₹').format(transaction.amount),
+              NumberFormat.currency(symbol: '৳ ').format(transaction.amount),
               color: color),
           _buildDetailRow('Date', 
               DateFormat('MMM dd, yyyy').format(transaction.date)),
@@ -43,7 +43,7 @@ class TransactionDetailsSheet extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   SizedBox(
                     width: 100,

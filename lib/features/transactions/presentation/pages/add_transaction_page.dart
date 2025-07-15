@@ -1,7 +1,10 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'dart:io';
+import 'package:phcl_accounts/core/widgets/custom_icon_button.dart';
 import 'package:phcl_accounts/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:phcl_accounts/features/transactions/presentation/bloc/transaction_bloc.dart';
 
@@ -43,11 +46,12 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
           key: _formKey,
           child: Column(
             children: [
+              _buildDatePicker(),
+              const SizedBox(height: 16),
               _buildCategoryDropdown(),
               const SizedBox(height: 16),
               _buildAmountField(),
               const SizedBox(height: 16),
-              _buildDatePicker(),
               if (widget.transactionType == 'income') ...[
                 const SizedBox(height: 16),
                 _buildClientIdField(),
@@ -101,7 +105,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
       controller: _amountController,
       decoration: const InputDecoration(
         labelText: 'Amount',
-        prefixText: '₹ ',
+        prefixText: '৳ ',
         border: OutlineInputBorder(),
       ),
       keyboardType: TextInputType.number,
@@ -139,10 +143,6 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
         labelText: 'Client ID',
         border: OutlineInputBorder(),
       ),
-      validator: (value) {
-        if (value == null || value.isEmpty) return 'Please enter client ID';
-        return null;
-      },
     );
   }
 
@@ -175,33 +175,181 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
         const Text('Attachment (Optional)'),
         const SizedBox(height: 8),
         Row(
-          children: [
-            ElevatedButton(
-              onPressed: () => _pickAttachment(ImageSource.gallery),
-              child: const Text('Gallery'),
-            ),
-            const SizedBox(width: 8),
-            ElevatedButton(
-              onPressed: () => _pickAttachment(ImageSource.camera),
-              child: const Text('Camera'),
-            ),
-          ],
+          spacing: 16,
+            children: [
+            CustomIconButton(onPressed: () => _pickAttachment(ImageSource.camera),  icon: Icons.camera_alt),
+            CustomIconButton(onPressed: () => _pickAttachment(null),  icon: Icons.library_add ),
+            ],
         ),
         if (_attachment != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(_attachment!.name),
+            child: _buildAttachmentPreview()
           ),
       ],
     );
   }
 
-  Future<void> _pickAttachment(ImageSource source) async {
-    final picked = await ImagePicker().pickImage(source: source);
-    if (picked != null) {
-      setState(() => _attachment = picked);
+Future<void> _pickAttachment(ImageSource? imageSource) async {
+  try {
+    if (imageSource == ImageSource.camera) {
+      final pickedImage = await ImagePicker().pickImage(
+        source: imageSource!,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      
+      if (pickedImage != null) {
+        final fileSize = await pickedImage.length();
+        if (fileSize > 5 * 1024 * 1024) { // 5MB limit
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('File size must be less than 5MB')),
+          );
+          return;
+        }
+        setState(() => _attachment = pickedImage);
+      }
+    } else {
+      final pickedFile = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'],
+        withData: true,
+      );
+      
+      if (pickedFile != null && pickedFile.files.isNotEmpty) {
+        final file = pickedFile.files.first;
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('File size must be less than 5MB')),
+          );
+          return;
+        }
+        
+        setState(() => _attachment = XFile(
+          file.path!, 
+          name: file.name,
+        ));
+      }
     }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error selecting file: ${e.toString()}')),
+    );
   }
+}
+
+Widget _buildAttachmentPreview() {
+  final fileName = _attachment!.name.toLowerCase();
+  final isImage = fileName.endsWith('.jpg') || 
+                 fileName.endsWith('.jpeg') || 
+                 fileName.endsWith('.png');
+  final isPdf = fileName.endsWith('.pdf');
+  final isWord = fileName.endsWith('.doc') || fileName.endsWith('.docx');
+
+  return FutureBuilder<int>(
+    future: _attachment!.length(),
+    builder: (context, snapshot) {
+      final fileSize = snapshot.hasData ? snapshot.data! : 0;
+      
+      return Card(
+        elevation: 2,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              if (isImage)
+                FutureBuilder<File>(
+                  future: Future.value(File(_attachment!.path)),
+
+                  builder: (context, snapshot) {
+                    if (snapshot.hasData) {
+                      return Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          image: DecorationImage(
+                            image: FileImage(snapshot.data!),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                      );
+                    }
+                    return Container(
+                      width: 60,
+                      height: 60,
+                      color: Colors.grey[200],
+                      child: const Center(child: CircularProgressIndicator()),
+                    );
+                  },
+                )
+              else
+                Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[200],
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      isPdf ? Icons.picture_as_pdf : 
+                      isWord ? Icons.description : 
+                      Icons.insert_drive_file,
+                      size: 32,
+                      color: isPdf ? Colors.red : 
+                            isWord ? Colors.blue : 
+                            Colors.grey,
+                    ),
+                  ),
+                ),
+              
+              const SizedBox(width: 12),
+              
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _attachment!.name,
+                      style: const TextStyle(fontWeight: FontWeight.w500),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isImage ? 'Image' : 
+                      isPdf ? 'PDF Document' : 
+                      isWord ? 'Word Document' : 'File',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${(fileSize / 1024).toStringAsFixed(1)} KB',
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              IconButton(
+                icon: const Icon(Icons.close, size: 20),
+                onPressed: () => setState(() => _attachment = null),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
 
   Widget _buildSubmitButton() {
     return ElevatedButton(
