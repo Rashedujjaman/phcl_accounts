@@ -71,30 +71,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
           ),
           
           // Transaction Type Filter
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              children: [
-                FilterChip(
-                  label: const Text('All'),
-                  selected: _selectedType == null,
-                  onSelected: (_) => _onTypeChanged(null),
-                ),
-                const SizedBox(width: 8),
-                FilterChip(
-                  label: const Text('Income'),
-                  selected: _selectedType == 'income',
-                  onSelected: (_) => _onTypeChanged('income'),
-                ),
-                const SizedBox(width: 8),
-                FilterChip(
-                  label: const Text('Expense'),
-                  selected: _selectedType == 'expense',
-                  onSelected: (_) => _onTypeChanged('expense'),
-                ),
-              ],
-            ),
-          ),
+          _buildTypeFilterChips(),
           
           // Transaction List
           Expanded(
@@ -107,16 +84,23 @@ class _TransactionsPageState extends State<TransactionsPage> {
                   return Center(child: Text(state.message));
                 }
                 if (state is TransactionLoaded) {
-                  if (state.transactions.isEmpty) {
+                  final transactions = state.transactions.where((t){
+                    if (state.currentType != null) {
+                      return t.type == state.currentType;
+                    }
+                    return true;
+                  }).toList();
+
+                  if (transactions.isEmpty) {
                     return const Center(child: Text('No transactions found'));
                   }
                   return ListView.builder(
-                    itemCount: state.transactions.length,
+                    itemCount: transactions.length,
                     itemBuilder: (context, index) {
                       return TransactionItem(
-                        transaction: state.transactions[index],
+                        transaction: transactions[index],
                         onTap: () => _showTransactionDetails(
-                            context, state.transactions[index]),
+                            context, transactions[index]),
                       );
                     },
                   );
@@ -148,8 +132,42 @@ class _TransactionsPageState extends State<TransactionsPage> {
     );
   }
 
-  void _navigateToAddTransaction(BuildContext context, String type) {
-    Navigator.push(
+  Widget _buildTypeFilterChips() {
+    return BlocBuilder<TransactionBloc, TransactionState>(
+      builder: (context, state) {
+        if (state is! TransactionLoaded) return const SizedBox();
+        
+        return Padding(padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            FilterChip(
+              label: const Text('All'),
+              selected: state.currentType == null,
+              onSelected: (_) => _onTypeChanged(null)              
+            ),
+            const SizedBox(width: 8),
+            FilterChip(
+              label: const Text('Income'),
+              selected: state.currentType == 'income',
+              onSelected: (_) => _onTypeChanged('income')
+            ),
+            const SizedBox(width: 8),
+            FilterChip(
+              label: const Text('Expense'),
+              selected: state.currentType == 'expense',
+              onSelected: (_) => _onTypeChanged('expense')
+            ),
+          ],
+        )
+        );
+      },
+    );
+  }
+
+  Future<void> _navigateToAddTransaction(BuildContext context, String type) async {
+    final currentState = context.read<TransactionBloc>().state;
+    
+    final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (context) => BlocProvider.value(
@@ -158,6 +176,14 @@ class _TransactionsPageState extends State<TransactionsPage> {
         ),
       ),
     );
+
+    if (result == null || result  == false) {
+    if (currentState is TransactionLoaded) {
+      context.read<TransactionBloc>().emit(currentState);
+    } else {
+      context.read<TransactionBloc>().add(LoadTransactions());
+    }
+    }
   }
 
   void _showTransactionDetails(BuildContext context, TransactionEntity transaction) {

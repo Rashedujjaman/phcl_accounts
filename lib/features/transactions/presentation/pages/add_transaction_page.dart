@@ -40,7 +40,14 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+    canPop: false,
+    onPopInvoked: (didPop) {
+      if (!didPop) {
+        Navigator.of(context).pop(false);
+      }
+    },
+    child: Scaffold(
       appBar: AppBar(
         title: Text('Add ${widget.transactionType.capitalize()}'),
       ),
@@ -72,6 +79,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
           ),
         ),
       ),
+    ),
     );
   }
 
@@ -372,94 +380,94 @@ Widget _buildSubmitButton() {
   );
 }
 
-  void _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      // Show loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => const AlertDialog(
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
-              Text('Processing transaction...'),
-            ],
-          ),
+void _submitForm() async {
+  if (_formKey.currentState!.validate()) {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CircularProgressIndicator(padding: EdgeInsets.all(16),),
+            SizedBox(height: 16),
+            Text('Processing transaction...'),
+          ],
         ),
-      );
-
-      try {
-        // Upload attachment if exists
-        if (_attachment != null) {
-          _attachmentUrl = await _uploadAttachment();
-          if (_attachmentUrl == null) {
-            Navigator.pop(context); // Close loading dialog
-            return; // Upload failed
-          }
-        }
-
-        // Create transaction
-        final transaction = TransactionEntity(
-          type: widget.transactionType,
-          category: _selectedCategory!,
-          date: _selectedDate,
-          amount: double.parse(_amountController.text),
-          clientId: widget.transactionType == 'income' ? _clientIdController.text : null,
-          contactNo: _contactNoController.text.isNotEmpty ? _contactNoController.text : null,
-          note: _noteController.text.isNotEmpty ? _noteController.text : null,
-          attachmentUrl: _attachmentUrl,
-          attachmentType: _attachment?.name.split('.').last.toLowerCase(),
-        );
-
-        // Add transaction
-        context.read<TransactionBloc>().add(AddTransaction(transaction: transaction));
-        
-        Navigator.pop(context); // Close loading dialog
-        Navigator.pop(context); // Close the form
-      } catch (e) {
-        Navigator.pop(context); // Close loading dialog
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
-      }
-    }
-  }
-
-  Future<String?> _uploadAttachment() async {
-    final completer = Completer<String?>();
-    
-    _uploadSubscription = context.read<TransactionBloc>().stream.listen((state) {
-      if (state is AttachmentUploadSuccess) {
-        completer.complete(state.downloadUrl);
-      } else if (state is AttachmentUploadFailure) {
-        completer.completeError(state.error);
-      }
-    });
-
-    context.read<TransactionBloc>().add(UploadAttachment(widget.transactionType, _attachment!,
-    ));
+      ),
+    );
 
     try {
-      return await completer.future;
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to upload attachment: $e')),
+      // Upload attachment if exists
+      if (_attachment != null) {
+        _attachmentUrl = await _uploadAttachment();
+        if (_attachmentUrl == null) {
+          Navigator.pop(context); // Close loading dialog
+          return; // Upload failed
+        }
+      }
+
+      // Create transaction
+      final transaction = TransactionEntity(
+        type: widget.transactionType,
+        category: _selectedCategory!,
+        date: _selectedDate,
+        amount: double.parse(_amountController.text),
+        clientId: widget.transactionType == 'income' ? _clientIdController.text : null,
+        contactNo: _contactNoController.text.isNotEmpty ? _contactNoController.text : null,
+        note: _noteController.text.isNotEmpty ? _noteController.text : null,
+        attachmentUrl: _attachmentUrl,
+        attachmentType: _attachment?.name.split('.').last.toLowerCase(),
       );
-      return null;
+
+      // Add transaction
+      context.read<TransactionBloc>().add(AddTransaction(transaction: transaction));
+      
+      Navigator.pop(context); // Close loading dialog
+      Navigator.pop(context, true); // Close the form
+    } catch (e) {
+      Navigator.pop(context); // Close loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
     }
   }
+}
 
-  @override
-  void dispose() {
-    _amountController.dispose();
-    _noteController.dispose();
-    _clientIdController.dispose();
-    _contactNoController.dispose();
-    _uploadSubscription?.cancel();
-    super.dispose();
+Future<String?> _uploadAttachment() async {
+  final completer = Completer<String?>();
+  
+  _uploadSubscription = context.read<TransactionBloc>().stream.listen((state) {
+    if (state is AttachmentUploadSuccess) {
+      completer.complete(state.downloadUrl);
+    } else if (state is AttachmentUploadFailure) {
+      completer.completeError(state.error);
+    }
+  });
+
+  context.read<TransactionBloc>().add(UploadAttachment(widget.transactionType, _attachment!,
+  ));
+
+  try {
+    return await completer.future;
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to upload attachment: $e')),
+    );
+    return null;
   }
+}
+
+@override
+void dispose() {
+  _amountController.dispose();
+  _noteController.dispose();
+  _clientIdController.dispose();
+  _contactNoController.dispose();
+  _uploadSubscription?.cancel();
+  super.dispose();
+}
 }
 
 extension StringExtension on String {

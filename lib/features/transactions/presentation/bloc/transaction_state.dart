@@ -13,11 +13,33 @@ class TransactionLoading extends TransactionState {}
 
 class TransactionLoaded extends TransactionState {
   final List<TransactionEntity> transactions;
+  final DateTime? currentStartDate;
+  final DateTime? currentEndDate;
+  final String? currentType;
 
-  const TransactionLoaded(this.transactions);
+  const TransactionLoaded(
+    this.transactions, {
+    this.currentStartDate,
+    this.currentEndDate,
+    this.currentType,
+  });
+
+  TransactionLoaded copyWith({
+    List<TransactionEntity>? transactions,
+    DateTime? currentStartDate,
+    DateTime? currentEndDate,
+    String? currentType,
+  }) {
+    return TransactionLoaded(
+      transactions ?? this.transactions,
+      currentStartDate: currentStartDate ?? this.currentStartDate,
+      currentEndDate: currentEndDate ?? this.currentEndDate,
+      currentType: currentType ?? this.currentType,
+    );
+  }
 
   @override
-  List<Object> get props => [transactions];
+  List<Object> get props => [transactions, currentStartDate ?? '', currentEndDate ?? '', currentType ?? ''];
 }
 
 class CategoryLoading extends TransactionState {}
