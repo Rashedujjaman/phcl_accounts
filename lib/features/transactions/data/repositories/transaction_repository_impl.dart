@@ -120,9 +120,9 @@ class TransactionRepositoryImpl implements TransactionRepository {
   Future<List<String>> getCategories({required String type}) async {
     try {
       final snapshot = type == 'expense'
-          ? await _firestore.collection('expenseCategories').get()
-          : await _firestore.collection('incomeCategories').get();
-      
+          ? await _firestore.collection('expenseCategories').orderBy('name').get()
+          : await _firestore.collection('incomeCategories').orderBy('name').get();
+
       return snapshot.docs.map((doc) => doc['name'] as String).toList();
     } on FirebaseException catch (e) {
       throw FirebaseFailure.fromCode(e.code);

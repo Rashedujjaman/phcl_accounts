@@ -40,45 +40,45 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-    canPop: false,
-    onPopInvoked: (didPop) {
-      if (!didPop) {
-        Navigator.of(context).pop(false);
-      }
-    },
-    child: Scaffold(
-      appBar: AppBar(
-        title: Text('Add ${widget.transactionType.capitalize()}'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              _buildDatePicker(),
-              _buildCategoryDropdown(),
-              const SizedBox(height: 16),
-              _buildAmountField(),
-              const SizedBox(height: 16),
-              if (widget.transactionType == 'income') ...[
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (!didPop) {
+          Navigator.of(context).pop(false);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Add ${widget.transactionType.capitalize()}'),
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              children: [
+                _buildDatePicker(),
+                _buildCategoryDropdown(),
                 const SizedBox(height: 16),
-                _buildClientIdField(),
+                _buildAmountField(),
                 const SizedBox(height: 16),
-                _buildContactNoField(),
+                if (widget.transactionType == 'income') ...[
+                  const SizedBox(height: 16),
+                  _buildClientIdField(),
+                  const SizedBox(height: 16),
+                  _buildContactNoField(),
+                  const SizedBox(height: 16),
+                ],
+                _buildNoteField(),
+                const SizedBox(height: 16),
+                _buildAttachmentPicker(),
+                const SizedBox(height: 32),
+                _buildSubmitButton(),
+                const SizedBox(height: 16),
               ],
-              const SizedBox(height: 16),
-              _buildNoteField(),
-              const SizedBox(height: 16),
-              _buildAttachmentPicker(),
-              const SizedBox(height: 32),
-              _buildSubmitButton(),
-              const SizedBox(height: 16),
-            ],
+            ),
           ),
         ),
       ),
-    ),
     );
   }
 
@@ -89,22 +89,27 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
           return const CircularProgressIndicator();
         }
         if (state is CategoryLoaded) {
-          return DropdownButtonFormField<String>(
-            value: _selectedCategory,
-            decoration: const InputDecoration(
-              labelText: 'Category',
-              border: OutlineInputBorder(),
-            ),
-            items: state.categories
-                .map((category) => DropdownMenuItem(
-                      value: category,
-                      child: Text(category),
-                    ))
-                .toList(),
-            onChanged: (value) => setState(() => _selectedCategory = value),
-            validator: (value) =>
+          final categories = state.categories;
+            return DropdownButtonFormField<String>(
+              value: _selectedCategory,
+              decoration: const InputDecoration(
+                labelText: 'Category',
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              ),
+              items: <DropdownMenuItem<String>>[
+                for (var category in categories)
+                DropdownMenuItem(
+                  value: category,
+                  child: Text(category, style: const TextStyle(fontSize: 14)),
+                )
+              ],
+              onChanged: (value) => setState(() => _selectedCategory = value),
+              validator: (value) =>
                 value == null ? 'Please select a category' : null,
-          );
+              isExpanded: true,
+              menuMaxHeight: 350,
+            );
         }
         return const Text('Failed to load categories');
       },

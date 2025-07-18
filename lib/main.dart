@@ -65,7 +65,7 @@ class MyApp extends StatelessWidget {
               getDashboardData: GetDashboardData(
                 context.read<DashboardRepository>(),
               ),
-            ),
+            )..add(LoadDashboardData()),
           ),
           BlocProvider(
             create: (context) => TransactionBloc(

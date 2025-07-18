@@ -1,27 +1,19 @@
 part of 'dashboard_bloc.dart';
 
 abstract class DashboardEvent extends Equatable {
-  const DashboardEvent();
-
-  @override
-  List<Object?> get props => [];
-}
-
-class LoadDashboardData extends DashboardEvent {
   final DateTime? startDate;
   final DateTime? endDate;
 
-  const LoadDashboardData({this.startDate, this.endDate});
+  const DashboardEvent({this.startDate, this.endDate});
 
   @override
   List<Object?> get props => [startDate, endDate];
 }
 
-class RestoreDashboardState extends DashboardEvent {
-  final DashboardState state;
+class LoadDashboardData extends DashboardEvent {
+  const LoadDashboardData({super.startDate, super.endDate});
+}
 
-  const RestoreDashboardState(this.state);
-
-  @override
-  List<Object?> get props => [state];
+class RefreshDashboardData extends DashboardEvent {
+  const RefreshDashboardData({super.startDate, super.endDate});
 }

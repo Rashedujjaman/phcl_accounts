@@ -38,27 +38,16 @@ class DashboardRepositoryImpl implements DashboardRepository {
 
       final snapshot = await query.get();
 
-      // Process transactions
-      // final transactions = snapshot.docs.map((doc) {
-      //   final data = doc.data() as Map<String, dynamic>;
-      //   return {
-      //     'type': data['type'],
-      //     'amount': (data['amount'] is int) ? (data['amount'] as int).toDouble() : data['amount'] as double,
-      //     'date': (data['date'] as Timestamp).toDate(),
-      //     'category': data['category'],
-      //   };
-      // }).toList();
-
       final transactions = snapshot.docs.map((doc) => TransactionEntity.fromDocumentSnapshot(doc)).toList();
 
       // Calculate totals
       final totalIncome = transactions
           .where((t) => t.type == 'income')
-          .fold<double>(0, (sum, t) => sum + (t.amount));
+          .fold<double>(0, (s, t) => s + (t.amount));
 
       final totalExpense = transactions
           .where((t) => t.type == 'expense')
-          .fold<double>(0, (sum, t) => sum + (t.amount));
+          .fold<double>(0, (s, t) => s + (t.amount));
 
       // Prepare chart data
       final incomeChartData = _prepareTimeSeriesData(
