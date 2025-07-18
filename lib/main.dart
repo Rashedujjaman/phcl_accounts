@@ -12,6 +12,10 @@ import 'package:phcl_accounts/features/auth/domain/usecases/sign_up.dart';
 import 'package:phcl_accounts/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:phcl_accounts/features/auth/presentation/pages/login_page.dart';
 import 'package:phcl_accounts/features/auth/presentation/pages/register_page.dart';
+import 'package:phcl_accounts/features/dashboard/data/repositories/dashboard_repository_impl.dart';
+import 'package:phcl_accounts/features/dashboard/domain/repositories/dashboard_repository.dart';
+import 'package:phcl_accounts/features/dashboard/domain/usecases/get_dashboard_data.dart';
+import 'package:phcl_accounts/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:phcl_accounts/features/transactions/data/repositories/transaction_repository_impl.dart';
 import 'package:phcl_accounts/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:phcl_accounts/features/transactions/presentation/bloc/transaction_bloc.dart';
@@ -35,6 +39,12 @@ class MyApp extends StatelessWidget {
             firestore: FirebaseFirestore.instance,
           ),
         ),
+        RepositoryProvider<DashboardRepository>(
+          create: (context) => DashboardRepositoryImpl(
+            auth: FirebaseAuth.instance,
+            firestore: FirebaseFirestore.instance,
+          ),
+        ),
         RepositoryProvider<TransactionRepository>(
           create: (context) => TransactionRepositoryImpl(
             firestore: FirebaseFirestore.instance,
@@ -49,6 +59,13 @@ class MyApp extends StatelessWidget {
               signIn: SignIn(context.read<AuthRepositoryImpl>()),
               signUp: SignUp(context.read<AuthRepositoryImpl>()),
             )..add(CheckAuthStatusEvent()),
+          ),
+          BlocProvider(
+            create: (context) => DashboardBloc(
+              getDashboardData: GetDashboardData(
+                context.read<DashboardRepository>(),
+              ),
+            ),
           ),
           BlocProvider(
             create: (context) => TransactionBloc(

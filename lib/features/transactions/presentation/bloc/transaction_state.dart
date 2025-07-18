@@ -24,20 +24,6 @@ class TransactionLoaded extends TransactionState {
     this.currentType,
   });
 
-  TransactionLoaded copyWith({
-    List<TransactionEntity>? transactions,
-    DateTime? currentStartDate,
-    DateTime? currentEndDate,
-    String? currentType,
-  }) {
-    return TransactionLoaded(
-      transactions ?? this.transactions,
-      currentStartDate: currentStartDate ?? this.currentStartDate,
-      currentEndDate: currentEndDate ?? this.currentEndDate,
-      currentType: currentType ?? this.currentType,
-    );
-  }
-
   @override
   List<Object> get props => [transactions, currentStartDate ?? '', currentEndDate ?? '', currentType ?? ''];
 }

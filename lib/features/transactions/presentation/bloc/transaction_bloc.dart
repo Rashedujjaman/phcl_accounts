@@ -13,6 +13,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
 
   TransactionBloc(this._repository) : super(TransactionInitial()) {
     on<LoadTransactions>(_onLoadTransactions);
+    on<RestoreTransactionsState>((event, emit) => _restoreTransactionsState);
     on<AddTransaction>(_onAddTransaction);
     on<UpdateTransaction>(_onUpdateTransaction);
     on<DeleteTransaction>(_onDeleteTransaction);
@@ -38,35 +39,31 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     }
   }
 
-Future<void> _onAddTransaction(
-  AddTransaction event,
-  Emitter<TransactionState> emit,
-) async {
-  try {
-    await _repository.addTransaction(event.transaction);
-    
-    final currentState = state;
-    
-    if (currentState is TransactionLoaded) {
-      final updatedTransactions = List<TransactionEntity>.from(currentState.transactions)
-        ..insert(0, event.transaction);
+  Future<void> _restoreTransactionsState(
+    RestoreTransactionsState event,
+    Emitter<TransactionState> emit,
+  ) async {
+    emit (event.state);
+  }
+
+  Future<void> _onAddTransaction(
+    AddTransaction event,
+    Emitter<TransactionState> emit,
+  ) async {
+    try {
+      await _repository.addTransaction(event.transaction);
+
+      emit(TransactionSuccess('Transaction added successfully'));
       
-      emit(currentState.copyWith(
-        transactions: updatedTransactions,
-      ));
-    } else {
-      // If no current state, just load fresh data
       add(LoadTransactions(
         startDate: event.startDate,
         endDate: event.endDate,
       ));
+
+    } catch (e) {
+      emit(TransactionError(e.toString()));
     }
-    
-    emit(TransactionSuccess('Transaction added successfully'));
-  } catch (e) {
-    emit(TransactionError(e.toString()));
   }
-}
 
   Future<void> _onLoadCategories(
     LoadCategories event,

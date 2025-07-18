@@ -18,6 +18,15 @@ class LoadTransactions extends TransactionEvent {
   List<Object> get props => [startDate ?? '', endDate ?? '', type ?? ''];
 }
 
+class RestoreTransactionsState extends TransactionEvent {
+  final TransactionLoaded state;
+
+  const RestoreTransactionsState(this.state);
+
+  @override
+  List<Object> get props => [state];
+}
+
 class AddTransaction extends TransactionEvent {
   final TransactionEntity transaction;
   final DateTime? startDate;

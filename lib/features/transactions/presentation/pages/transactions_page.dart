@@ -164,27 +164,46 @@ class _TransactionsPageState extends State<TransactionsPage> {
     );
   }
 
-  Future<void> _navigateToAddTransaction(BuildContext context, String type) async {
-    final currentState = context.read<TransactionBloc>().state;
-    
-    final result = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BlocProvider.value(
-          value: BlocProvider.of<TransactionBloc>(context),
-          child: AddTransactionPage(transactionType: type),
-        ),
-      ),
-    );
-
-    if (result == null || result  == false) {
-    if (currentState is TransactionLoaded) {
-      context.read<TransactionBloc>().emit(currentState);
-    } else {
-      context.read<TransactionBloc>().add(LoadTransactions());
-    }
-    }
+Future<void> _navigateToAddTransaction(BuildContext context, String type) async {
+  // Get the current state before navigation
+  final bloc = context.read<TransactionBloc>();
+  final currentState = bloc.state;
+  
+  // Store the current filter values
+  DateTime? startDate;
+  DateTime? endDate;
+  String? currentType;
+  
+  if (currentState is TransactionLoaded) {
+    startDate = currentState.currentStartDate;
+    endDate = currentState.currentEndDate;
+    currentType = currentState.currentType;
   }
+
+  // Navigate to add transaction page
+  final result = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      builder: (context) => BlocProvider.value(
+        value: bloc,
+        child: AddTransactionPage(transactionType: type),
+      ),
+    ),
+  );
+
+  // Check if widget is still mounted
+  if (!mounted) return;
+
+  // Handle the return result
+  if (result == null || result == false) {
+    // Always reload with the original filters
+    bloc.add(LoadTransactions(
+      startDate: startDate,
+      endDate: endDate,
+      type: currentType,
+    ));
+  }
+}
 
   void _showTransactionDetails(BuildContext context, TransactionEntity transaction) {
     showModalBottomSheet(

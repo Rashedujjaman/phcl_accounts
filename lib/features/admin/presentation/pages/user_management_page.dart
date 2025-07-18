@@ -66,7 +66,9 @@ class UserManagementPage extends StatelessWidget {
             TextButton(
               onPressed: () async {
                 await user.reference.update({'role': roleController.text});
-                Navigator.pop(context);
+                if (context.mounted) {                
+                  Navigator.pop(context);
+                }
               },
               child: const Text('Save'),
             ),

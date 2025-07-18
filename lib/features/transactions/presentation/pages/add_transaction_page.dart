@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -403,7 +402,9 @@ void _submitForm() async {
       if (_attachment != null) {
         _attachmentUrl = await _uploadAttachment();
         if (_attachmentUrl == null) {
-          Navigator.pop(context); // Close loading dialog
+          if (mounted) {
+            Navigator.pop(context); // Close loading dialog
+          }
           return; // Upload failed
         }
       }
