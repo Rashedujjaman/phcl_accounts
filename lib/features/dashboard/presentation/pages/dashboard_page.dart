@@ -258,7 +258,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   Widget _buildIncomeVsExpenseChart(DashboardData data) {
     return SfCartesianChart(
-      title: const ChartTitle(text: 'Monthly Income vs Expense'),
+      title: const ChartTitle(text: 'Income vs Expense'),
       primaryXAxis: const CategoryAxis(),
       series: <CartesianSeries<ChartData, String>>[
         ColumnSeries<ChartData, String>(
