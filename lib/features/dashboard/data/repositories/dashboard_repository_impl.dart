@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:intl/intl.dart';
 import 'package:phcl_accounts/core/errors/firebase_failure.dart';
 import 'package:phcl_accounts/features/dashboard/domain/entities/dashboard_data.dart';
 import 'package:phcl_accounts/features/dashboard/domain/repositories/dashboard_repository.dart';
@@ -58,9 +59,15 @@ class DashboardRepositoryImpl implements DashboardRepository {
         transactions.where((t) => t.type == 'expense').toList(),
       );
 
-      final categoryDistribution = _prepareCategoryData(
+      final expenseCategoryDistribution = _prepareCategoryData(
         transactions.where((t) => t.type == 'expense').toList(),
       );
+
+      final incomeCategoryDistribution = _prepareCategoryData(
+        transactions.where((t) => t.type == 'income').toList(),
+      );
+
+      final revenueTrendData = _prepareRevenueTrendData(transactions);
 
       return DashboardData(
         totalIncome: totalIncome,
@@ -68,7 +75,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
         netBalance: totalIncome - totalExpense,
         incomeChartData: incomeChartData,
         expenseChartData: expenseChartData,
-        categoryDistribution: categoryDistribution,
+        incomeCategoryDistribution: incomeCategoryDistribution,
+        expenseCategoryDistribution: expenseCategoryDistribution,
+        revenueTrendData: revenueTrendData,
       );
     } on FirebaseException catch (e) {
       throw FirebaseFailure.fromCode(e.code);
@@ -77,29 +86,25 @@ class DashboardRepositoryImpl implements DashboardRepository {
     }
   }
 
-  List<TransactionChartData> _prepareTimeSeriesData(List<TransactionEntity> transactions) {
-    final Map<DateTime, double> dailyTotals = {};
+  List<ChartData> _prepareTimeSeriesData(List<TransactionEntity> transactions) {
+    final Map<String, double> dailyTotals = {};
 
     for (final t in transactions) {
-      final date = DateTime(
-        t.date.year,
-        t.date.month,
-        t.date.day,
-      );
+      final key = DateFormat('MMM yy').format(t.date);
       dailyTotals.update(
-        date,
+        key,
         (value) => value + (t.amount),
         ifAbsent: () => t.amount,
       );
     }
 
     return dailyTotals.entries
-        .map((e) => TransactionChartData(e.key, e.value))
+        .map((e) => ChartData(e.key, e.value))
         .toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
+      ..sort((a, b) => a.key.compareTo(b.key));
   }
 
-  List<CategoryChartData> _prepareCategoryData(List<TransactionEntity> transactions) {
+  List<ChartData> _prepareCategoryData(List<TransactionEntity> transactions) {
     final Map<String, double> categoryTotals = {};
 
     for (final t in transactions) {
@@ -112,8 +117,35 @@ class DashboardRepositoryImpl implements DashboardRepository {
     }
 
     return categoryTotals.entries
-        .map((e) => CategoryChartData(e.key, e.value))
+        .map((e) => ChartData(e.key, e.value))
         .toList()
-      ..sort((a, b) => b.amount.compareTo(a.amount));
+      ..sort((a, b) => b.value.compareTo(a.value));
+  }
+
+  List<ChartData> _prepareRevenueTrendData(List<TransactionEntity> transactions) {
+    final Map<String, double> monthlyMap = {};
+
+    for (var transaction in transactions) {
+      final key = DateFormat('MMM yy').format(transaction.date);
+      monthlyMap.update(
+        key,
+        (val) => transaction.type == 'income'
+            ? val + transaction.amount
+            : val - transaction.amount,
+        ifAbsent: () => transaction.type == 'income'
+            ? transaction.amount
+            : -transaction.amount,
+      );
+    }
+
+    // Convert to list and sort by date
+    var sortedData = monthlyMap.entries
+        .map((e) => ChartData(e.key, e.value))
+        .toList()
+      ..sort((a, b) => DateFormat('MMM yy')
+          .parse(a.key)
+          .compareTo(DateFormat('MMM yy').parse(b.key)));
+
+    return sortedData;
   }
 }

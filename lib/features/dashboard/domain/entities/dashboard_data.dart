@@ -2,9 +2,11 @@ class DashboardData {
   final double totalIncome;
   final double totalExpense;
   final double netBalance;
-  final List<TransactionChartData> incomeChartData;
-  final List<TransactionChartData> expenseChartData;
-  final List<CategoryChartData> categoryDistribution;
+  final List<ChartData> incomeChartData;
+  final List<ChartData> expenseChartData;
+  final List<ChartData> incomeCategoryDistribution;
+  final List<ChartData> expenseCategoryDistribution;
+  final List<ChartData> revenueTrendData;
 
   DashboardData({
     required this.totalIncome,
@@ -12,20 +14,15 @@ class DashboardData {
     required this.netBalance,
     required this.incomeChartData,
     required this.expenseChartData,
-    required this.categoryDistribution,
+    required this.incomeCategoryDistribution,
+    required this.expenseCategoryDistribution,
+    required this.revenueTrendData,
   });
 }
 
-class TransactionChartData {
-  final DateTime date;
-  final double amount;
+class ChartData {
+  final String key;
+  final double value;
 
-  TransactionChartData(this.date, this.amount);
-}
-
-class CategoryChartData {
-  final String category;
-  final double amount;
-
-  CategoryChartData(this.category, this.amount);
+  ChartData(this.key, this.value);
 }

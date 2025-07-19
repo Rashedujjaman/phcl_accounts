@@ -61,7 +61,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Transactions')),
+      // appBar: AppBar(title: const Text('Transactions')),
       body: Column(
         children: [
           // Date Range Selector
