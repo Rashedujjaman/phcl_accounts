@@ -110,6 +110,7 @@ class _DateRangeSelectorState extends State<DateRangeSelector> {
     }
 
     _updateRange(newRange);
+    setState(() => _selectedPreset = label);
   }
 
   Future<void> _selectDate(bool isStart) async {
@@ -188,8 +189,9 @@ class _PresetButton extends StatelessWidget {
               ? Theme.of(context).colorScheme.onPrimary 
               : Theme.of(context).textTheme.bodyMedium?.color,
         ),
-        selectedColor: Theme.of(context).colorScheme.primary,
-        backgroundColor: selected ? Colors.grey : Theme.of(context).colorScheme.surface,
+        selectedColor: Theme.of(context).colorScheme.secondary,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        showCheckmark: false,
         side: BorderSide(
           color: Theme.of(context).dividerColor,
           width: 1,
