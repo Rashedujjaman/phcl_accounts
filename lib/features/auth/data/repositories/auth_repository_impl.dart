@@ -4,7 +4,6 @@ import 'package:phcl_accounts/features/auth/domain/repositories/auth_repository.
 import 'package:phcl_accounts/features/auth/domain/entities/user_entry.dart';
 import 'package:phcl_accounts/core/errors/firebase_auth_failure.dart';
 
-
 class AuthRepositoryImpl implements AuthRepository {
   final FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
@@ -12,16 +11,17 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({
     required FirebaseAuth firebaseAuth,
     required FirebaseFirestore firestore,
-  })  : _firebaseAuth = firebaseAuth,
-        _firestore = firestore;
+  }) : _firebaseAuth = firebaseAuth,
+       _firestore = firestore;
 
   @override
-  Future<void> signIn(String email, String password) async {
+  Future<User?> signIn(String email, String password) async {
     try {
-      await _firebaseAuth.signInWithEmailAndPassword(
+      final result = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+      return result.user;
     } on FirebaseAuthException catch (e) {
       throw FirebaseAuthFailure.fromCode(e.code);
     } catch (_) {
@@ -30,20 +30,23 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> signUp(String email, String password, String name, String contactNo, String role)
-  async {
+  Future<void> signUp(
+    String email,
+    String password,
+    String name,
+    String contactNo,
+    String role,
+  ) async {
     try {
-      UserCredential userCredential = await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential userCredential = await _firebaseAuth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       UserEntity user = UserEntity(
         uid: userCredential.user!.uid,
         email: email,
         name: name,
         contactNo: contactNo,
-        role: role
+        role: role,
       );
 
       await _firestore.collection('users').doc(user.uid).set(user.toMap());
@@ -75,12 +78,12 @@ class AuthRepositoryImpl implements AuthRepository {
       throw const FirebaseAuthFailure();
     }
 
-    DocumentSnapshot doc = await _firestore.collection('users').doc(user.uid).get();
+    DocumentSnapshot doc =
+        await _firestore.collection('users').doc(user.uid).get();
     if (!doc.exists) {
       throw const FirebaseAuthFailure();
     }
 
     return UserEntity.fromMap(doc.data() as Map<String, dynamic>);
   }
-
 }
