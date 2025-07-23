@@ -30,6 +30,17 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<void> signOut() async {
+    try {
+      await _firebaseAuth.signOut();
+    } on FirebaseAuthException catch (e) {
+      throw FirebaseAuthFailure.fromCode(e.code);
+    } catch (_) {
+      throw const FirebaseAuthFailure();
+    }
+  }
+
+  @override
   Future<void> signUp(
     String email,
     String password,
@@ -58,15 +69,6 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<void> signOut() async {
-    try {
-      await _firebaseAuth.signOut();
-    } catch (_) {
-      throw const FirebaseAuthFailure();
-    }
-  }
-
-  @override
   Future<bool> isSignedIn() async {
     return _firebaseAuth.currentUser != null;
   }
@@ -78,8 +80,10 @@ class AuthRepositoryImpl implements AuthRepository {
       throw const FirebaseAuthFailure();
     }
 
-    DocumentSnapshot doc =
-        await _firestore.collection('users').doc(user.uid).get();
+    DocumentSnapshot doc = await _firestore
+        .collection('users')
+        .doc(user.uid)
+        .get();
     if (!doc.exists) {
       throw const FirebaseAuthFailure();
     }

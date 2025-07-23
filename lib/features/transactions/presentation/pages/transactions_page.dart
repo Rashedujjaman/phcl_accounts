@@ -29,33 +29,34 @@ class _TransactionsPageState extends State<TransactionsPage> {
     final firstDayOfMonth = DateTime(now.year, now.month, 1);
     _dateRange = DateTimeRange(start: firstDayOfMonth, end: now);
     context.read<TransactionBloc>().add(
-          LoadTransactions(
-            startDate: _dateRange?.start,
-            endDate: _dateRange?.end,
-          ),
-        );
+      LoadTransactions(startDate: _dateRange?.start, endDate: _dateRange?.end),
+    );
   }
 
   void _onDateRangeChanged(DateTimeRange range) {
-    setState(() => _dateRange = range);
-    context.read<TransactionBloc>().add(
-          LoadTransactions(
-            startDate: range.start,
-            endDate: range.end,
-            type: _selectedType,
-          ),
-        );
+    if (mounted) {
+      setState(() => _dateRange = range);
+      context.read<TransactionBloc>().add(
+        LoadTransactions(
+          startDate: range.start,
+          endDate: range.end,
+          type: _selectedType,
+        ),
+      );
+    }
   }
 
   void _onTypeChanged(String? type) {
-    setState(() => _selectedType = type);
-    context.read<TransactionBloc>().add(
-          LoadTransactions(
-            startDate: _dateRange?.start,
-            endDate: _dateRange?.end,
-            type: type,
-          ),
-        );
+    if (mounted) {
+      setState(() => _selectedType = type);
+      context.read<TransactionBloc>().add(
+        LoadTransactions(
+          startDate: _dateRange?.start,
+          endDate: _dateRange?.end,
+          type: type,
+        ),
+      );
+    }
   }
 
   @override
@@ -69,10 +70,10 @@ class _TransactionsPageState extends State<TransactionsPage> {
             initialRange: _dateRange,
             onChanged: _onDateRangeChanged,
           ),
-          
+
           // Transaction Type Filter
           _buildTypeFilterChips(),
-          
+
           // Transaction List
           Expanded(
             child: BlocBuilder<TransactionBloc, TransactionState>(
@@ -84,7 +85,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
                   return Center(child: Text(state.message));
                 }
                 if (state is TransactionLoaded) {
-                  final transactions = state.transactions.where((t){
+                  final transactions = state.transactions.where((t) {
                     if (state.currentType != null) {
                       return t.type == state.currentType;
                     }
@@ -100,7 +101,9 @@ class _TransactionsPageState extends State<TransactionsPage> {
                       return TransactionItem(
                         transaction: transactions[index],
                         onTap: () => _showTransactionDetails(
-                            context, transactions[index]),
+                          context,
+                          transactions[index],
+                        ),
                       );
                     },
                   );
@@ -136,76 +139,85 @@ class _TransactionsPageState extends State<TransactionsPage> {
     return BlocBuilder<TransactionBloc, TransactionState>(
       builder: (context, state) {
         if (state is! TransactionLoaded) return const SizedBox();
-        
-        return Padding(padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            FilterChip(
-              label: const Text('All'),
-              selected: state.currentType == null,
-              onSelected: (_) => _onTypeChanged(null)              
-            ),
-            const SizedBox(width: 8),
-            FilterChip(
-              label: const Text('Income'),
-              selected: state.currentType == 'income',
-              onSelected: (_) => _onTypeChanged('income')
-            ),
-            const SizedBox(width: 8),
-            FilterChip(
-              label: const Text('Expense'),
-              selected: state.currentType == 'expense',
-              onSelected: (_) => _onTypeChanged('expense')
-            ),
-          ],
-        )
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              FilterChip(
+                label: const Text('All'),
+                selected: state.currentType == null,
+                onSelected: (_) => _onTypeChanged(null),
+              ),
+              const SizedBox(width: 8),
+              FilterChip(
+                label: const Text('Income'),
+                selected: state.currentType == 'income',
+                onSelected: (_) => _onTypeChanged('income'),
+              ),
+              const SizedBox(width: 8),
+              FilterChip(
+                label: const Text('Expense'),
+                selected: state.currentType == 'expense',
+                onSelected: (_) => _onTypeChanged('expense'),
+              ),
+            ],
+          ),
         );
       },
     );
   }
 
-Future<void> _navigateToAddTransaction(BuildContext context, String type) async {
-  // Get the current state before navigation
-  final bloc = context.read<TransactionBloc>();
-  final currentState = bloc.state;
-  
-  // Store the current filter values
-  DateTime? startDate;
-  DateTime? endDate;
-  String? currentType;
-  
-  if (currentState is TransactionLoaded) {
-    startDate = currentState.currentStartDate;
-    endDate = currentState.currentEndDate;
-    currentType = currentState.currentType;
-  }
+  Future<void> _navigateToAddTransaction(
+    BuildContext context,
+    String type,
+  ) async {
+    // Get the current state before navigation
+    final bloc = context.read<TransactionBloc>();
+    final currentState = bloc.state;
 
-  // Navigate to add transaction page
-  final result = await Navigator.push<bool>(
-    context,
-    MaterialPageRoute(
-      builder: (context) => BlocProvider.value(
-        value: bloc,
-        child: AddTransactionPage(transactionType: type),
+    // Store the current filter values
+    DateTime? startDate;
+    DateTime? endDate;
+    String? currentType;
+
+    if (currentState is TransactionLoaded) {
+      startDate = currentState.currentStartDate;
+      endDate = currentState.currentEndDate;
+      currentType = currentState.currentType;
+    }
+
+    // Navigate to add transaction page
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BlocProvider.value(
+          value: bloc,
+          child: AddTransactionPage(transactionType: type),
+        ),
       ),
-    ),
-  );
+    );
 
-  // Check if widget is still mounted
-  if (!mounted) return;
+    // Check if widget is still mounted
+    if (!mounted) return;
 
-  // Handle the return result
-  if (result == null || result == false) {
-    // Always reload with the original filters
-    bloc.add(LoadTransactions(
-      startDate: startDate,
-      endDate: endDate,
-      type: currentType,
-    ));
+    // Handle the return result
+    if (result == null || result == false) {
+      // Always reload with the original filters
+      bloc.add(
+        LoadTransactions(
+          startDate: startDate,
+          endDate: endDate,
+          type: currentType,
+        ),
+      );
+    }
   }
-}
 
-  void _showTransactionDetails(BuildContext context, TransactionEntity transaction) {
+  void _showTransactionDetails(
+    BuildContext context,
+    TransactionEntity transaction,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,

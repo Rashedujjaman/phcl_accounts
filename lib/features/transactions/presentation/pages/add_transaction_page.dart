@@ -90,26 +90,33 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
         }
         if (state is CategoryLoaded) {
           final categories = state.categories;
-            return DropdownButtonFormField<String>(
-              value: _selectedCategory,
-              decoration: const InputDecoration(
-                labelText: 'Category',
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          return DropdownButtonFormField<String>(
+            value: _selectedCategory,
+            decoration: const InputDecoration(
+              labelText: 'Category',
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 16,
               ),
-              items: <DropdownMenuItem<String>>[
-                for (var category in categories)
+            ),
+            items: <DropdownMenuItem<String>>[
+              for (var category in categories)
                 DropdownMenuItem(
                   value: category,
                   child: Text(category, style: const TextStyle(fontSize: 14)),
-                )
-              ],
-              onChanged: (value) => setState(() => _selectedCategory = value),
-              validator: (value) =>
+                ),
+            ],
+            onChanged: (value) {
+              if (mounted) {
+                setState(() => _selectedCategory = value);
+              }
+            },
+            validator: (value) =>
                 value == null ? 'Please select a category' : null,
-              isExpanded: true,
-              menuMaxHeight: 350,
-            );
+            isExpanded: true,
+            menuMaxHeight: 350,
+          );
         }
         return const Text('Failed to load categories');
       },
@@ -145,7 +152,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
           firstDate: DateTime(2000),
           lastDate: DateTime.now(),
         );
-        if (picked != null) {
+        if (picked != null && mounted) {
           setState(() => _selectedDate = picked);
         }
       },
@@ -192,288 +199,341 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
         const SizedBox(height: 8),
         Row(
           spacing: 16,
-            children: [
-            CustomIconButton(onPressed: () => _pickAttachment(ImageSource.camera),  icon: Icons.camera_alt),
-            CustomIconButton(onPressed: () => _pickAttachment(null),  icon: Icons.library_add ),
-            ],
+          children: [
+            CustomIconButton(
+              onPressed: () => _pickAttachment(ImageSource.camera),
+              icon: Icons.camera_alt,
+            ),
+            CustomIconButton(
+              onPressed: () => _pickAttachment(null),
+              icon: Icons.library_add,
+            ),
+          ],
         ),
         if (_attachment != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: _buildAttachmentPreview()
+            child: _buildAttachmentPreview(),
           ),
       ],
     );
   }
 
-Future<void> _pickAttachment(ImageSource? imageSource) async {
-  try {
-    if (imageSource == ImageSource.camera) {
-      final pickedImage = await ImagePicker().pickImage(
-        source: imageSource!,
-        maxWidth: 1024,
-        maxHeight: 1024,
-        imageQuality: 85,
-      );
-      
-      if (pickedImage != null) {
-        final fileSize = await pickedImage.length();
-        if (fileSize > 5 * 1024 * 1024) { // 5MB limit
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('File size must be less than 5MB')),
-          );
-          return;
+  Future<void> _pickAttachment(ImageSource? imageSource) async {
+    try {
+      if (imageSource == ImageSource.camera) {
+        final pickedImage = await ImagePicker().pickImage(
+          source: imageSource!,
+          maxWidth: 1024,
+          maxHeight: 1024,
+          imageQuality: 85,
+        );
+
+        if (pickedImage != null) {
+          final fileSize = await pickedImage.length();
+          if (fileSize > 5 * 1024 * 1024) {
+            // 5MB limit
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('File size must be less than 5MB'),
+                ),
+              );
+            }
+            return;
+          }
+          if (mounted) {
+            setState(() => _attachment = pickedImage);
+          }
         }
-        setState(() => _attachment = pickedImage);
+      } else {
+        final pickedFile = await FilePicker.platform.pickFiles(
+          type: FileType.custom,
+          allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
+          withData: true,
+        );
+
+        if (pickedFile != null && pickedFile.files.isNotEmpty) {
+          final file = pickedFile.files.first;
+          if (file.size > 5 * 1024 * 1024) {
+            // 5MB limit
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('File size must be less than 5MB'),
+                ),
+              );
+            }
+            return;
+          }
+
+          if (mounted) {
+            setState(() => _attachment = XFile(file.path!, name: file.name));
+          }
+        }
       }
-    } else {
-      final pickedFile = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'jpg', 'jpeg', 'png'],
-        withData: true,
-      );
-      
-      if (pickedFile != null && pickedFile.files.isNotEmpty) {
-        final file = pickedFile.files.first;
-        if (file.size > 5 * 1024 * 1024) { // 5MB limit
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('File size must be less than 5MB')),
-          );
-          return;
-        }
-        
-        setState(() => _attachment = XFile(
-          file.path!, 
-          name: file.name,
-        ));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error selecting file: ${e.toString()}')),
+        );
       }
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error selecting file: ${e.toString()}')),
-    );
   }
-}
 
-Widget _buildAttachmentPreview() {
-  final fileName = _attachment!.name.toLowerCase();
-  final isImage = fileName.endsWith('.jpg') || 
-                 fileName.endsWith('.jpeg') || 
-                 fileName.endsWith('.png');
-  final isPdf = fileName.endsWith('.pdf');
-  final isWord = fileName.endsWith('.doc') || fileName.endsWith('.docx');
+  Widget _buildAttachmentPreview() {
+    final fileName = _attachment!.name.toLowerCase();
+    final isImage =
+        fileName.endsWith('.jpg') ||
+        fileName.endsWith('.jpeg') ||
+        fileName.endsWith('.png');
+    final isPdf = fileName.endsWith('.pdf');
+    final isWord = fileName.endsWith('.doc') || fileName.endsWith('.docx');
 
-  return FutureBuilder<int>(
-    future: _attachment!.length(),
-    builder: (context, snapshot) {
-      final fileSize = snapshot.hasData ? snapshot.data! : 0;
-      
-      return Card(
-        elevation: 2,
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              if (isImage)
-                FutureBuilder<File>(
-                  future: Future.value(File(_attachment!.path)),
+    return FutureBuilder<int>(
+      future: _attachment!.length(),
+      builder: (context, snapshot) {
+        final fileSize = snapshot.hasData ? snapshot.data! : 0;
 
-                  builder: (context, snapshot) {
-                    if (snapshot.hasData) {
+        return Card(
+          elevation: 2,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                if (isImage)
+                  FutureBuilder<File>(
+                    future: Future.value(File(_attachment!.path)),
+
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(4),
+                            image: DecorationImage(
+                              image: FileImage(snapshot.data!),
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        );
+                      }
                       return Container(
                         width: 60,
                         height: 60,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                          image: DecorationImage(
-                            image: FileImage(snapshot.data!),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                        color: Colors.grey[200],
+                        child: const Center(child: CircularProgressIndicator()),
                       );
-                    }
-                    return Container(
-                      width: 60,
-                      height: 60,
+                    },
+                  )
+                else
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
                       color: Colors.grey[200],
-                      child: const Center(child: CircularProgressIndicator()),
-                    );
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        isPdf
+                            ? Icons.picture_as_pdf
+                            : isWord
+                            ? Icons.description
+                            : Icons.insert_drive_file,
+                        size: 32,
+                        color: isPdf
+                            ? Colors.red
+                            : isWord
+                            ? Colors.blue
+                            : Colors.grey,
+                      ),
+                    ),
+                  ),
+
+                const SizedBox(width: 12),
+
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _attachment!.name,
+                        style: const TextStyle(fontWeight: FontWeight.w500),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        isImage
+                            ? 'Image'
+                            : isPdf
+                            ? 'PDF Document'
+                            : isWord
+                            ? 'Word Document'
+                            : 'File',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${(fileSize / 1024).toStringAsFixed(1)} KB',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+
+                IconButton(
+                  icon: const Icon(Icons.close, size: 20),
+                  onPressed: () {
+                    if (mounted) {
+                      setState(() => _attachment = null);
+                    }
                   },
-                )
-              else
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      isPdf ? Icons.picture_as_pdf : 
-                      isWord ? Icons.description : 
-                      Icons.insert_drive_file,
-                      size: 32,
-                      color: isPdf ? Colors.red : 
-                            isWord ? Colors.blue : 
-                            Colors.grey,
-                    ),
-                  ),
                 ),
-              
-              const SizedBox(width: 12),
-              
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _attachment!.name,
-                      style: const TextStyle(fontWeight: FontWeight.w500),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      isImage ? 'Image' : 
-                      isPdf ? 'PDF Document' : 
-                      isWord ? 'Word Document' : 'File',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${(fileSize / 1024).toStringAsFixed(1)} KB',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              IconButton(
-                icon: const Icon(Icons.close, size: 20),
-                onPressed: () => setState(() => _attachment = null),
-              ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSubmitButton() {
+    return ElevatedButton(
+      onPressed: _submitForm,
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size(double.infinity, 48),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(
+            color: Theme.of(context).colorScheme.primary,
+            width: 1.5,
+          ),
+        ),
+      ),
+      child: const Text('Submit Transaction'),
+    );
+  }
+
+  void _submitForm() async {
+    if (_formKey.currentState!.validate()) {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(padding: EdgeInsets.all(16)),
+              SizedBox(height: 16),
+              Text('Processing transaction...'),
             ],
           ),
         ),
       );
-    },
-  );
-}
 
-Widget _buildSubmitButton() {
-  return ElevatedButton(
-    onPressed: _submitForm,
-    style: ElevatedButton.styleFrom(
-      minimumSize: const Size(double.infinity, 48),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: Theme.of(context).colorScheme.primary,
-          width: 1.5,
-        ),
-      ),
-    ),
-    child: const Text('Submit Transaction'),
-  );
-}
+      try {
+        // Upload attachment if exists
+        if (_attachment != null) {
+          _attachmentUrl = await _uploadAttachment();
+          if (_attachmentUrl == null) {
+            if (mounted) {
+              Navigator.pop(context); // Close loading dialog
+            }
+            return; // Upload failed
+          }
+        }
 
-void _submitForm() async {
-  if (_formKey.currentState!.validate()) {
-    // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const AlertDialog(
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(padding: EdgeInsets.all(16),),
-            SizedBox(height: 16),
-            Text('Processing transaction...'),
-          ],
-        ),
-      ),
+        // Create transaction
+        final transaction = TransactionEntity(
+          type: widget.transactionType,
+          category: _selectedCategory!,
+          date: _selectedDate,
+          amount: double.parse(_amountController.text),
+          clientId: widget.transactionType == 'income'
+              ? _clientIdController.text
+              : null,
+          contactNo: _contactNoController.text.isNotEmpty
+              ? _contactNoController.text
+              : null,
+          note: _noteController.text.isNotEmpty ? _noteController.text : null,
+          attachmentUrl: _attachmentUrl,
+          attachmentType: _attachment?.name.split('.').last.toLowerCase(),
+        );
+
+        // Add transaction
+        if (mounted) {
+          context.read<TransactionBloc>().add(
+            AddTransaction(transaction: transaction),
+          );
+
+          Navigator.pop(context); // Close loading dialog
+          Navigator.pop(context, true); // Close the form
+        }
+      } catch (e) {
+        if (mounted) {
+          Navigator.pop(context); // Close loading dialog
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
+        }
+      }
+    }
+  }
+
+  Future<String?> _uploadAttachment() async {
+    final completer = Completer<String?>();
+
+    _uploadSubscription = context.read<TransactionBloc>().stream.listen((
+      state,
+    ) {
+      if (!mounted) {
+        // Widget has been disposed, cancel the operation
+        if (!completer.isCompleted) {
+          completer.completeError('Widget disposed during upload');
+        }
+        return;
+      }
+
+      if (state is AttachmentUploadSuccess) {
+        if (!completer.isCompleted) {
+          completer.complete(state.downloadUrl);
+        }
+      } else if (state is AttachmentUploadFailure) {
+        if (!completer.isCompleted) {
+          completer.completeError(state.error);
+        }
+      }
+    });
+
+    context.read<TransactionBloc>().add(
+      UploadAttachment(widget.transactionType, _attachment!),
     );
 
     try {
-      // Upload attachment if exists
-      if (_attachment != null) {
-        _attachmentUrl = await _uploadAttachment();
-        if (_attachmentUrl == null) {
-          if (mounted) {
-            Navigator.pop(context); // Close loading dialog
-          }
-          return; // Upload failed
-        }
-      }
-
-      // Create transaction
-      final transaction = TransactionEntity(
-        type: widget.transactionType,
-        category: _selectedCategory!,
-        date: _selectedDate,
-        amount: double.parse(_amountController.text),
-        clientId: widget.transactionType == 'income' ? _clientIdController.text : null,
-        contactNo: _contactNoController.text.isNotEmpty ? _contactNoController.text : null,
-        note: _noteController.text.isNotEmpty ? _noteController.text : null,
-        attachmentUrl: _attachmentUrl,
-        attachmentType: _attachment?.name.split('.').last.toLowerCase(),
-      );
-
-      // Add transaction
-      context.read<TransactionBloc>().add(AddTransaction(transaction: transaction));
-      
-      Navigator.pop(context); // Close loading dialog
-      Navigator.pop(context, true); // Close the form
+      return await completer.future;
     } catch (e) {
-      Navigator.pop(context); // Close loading dialog
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to upload attachment: $e')),
+        );
+      }
+      return null;
     }
   }
-}
 
-Future<String?> _uploadAttachment() async {
-  final completer = Completer<String?>();
-  
-  _uploadSubscription = context.read<TransactionBloc>().stream.listen((state) {
-    if (state is AttachmentUploadSuccess) {
-      completer.complete(state.downloadUrl);
-    } else if (state is AttachmentUploadFailure) {
-      completer.completeError(state.error);
-    }
-  });
-
-  context.read<TransactionBloc>().add(UploadAttachment(widget.transactionType, _attachment!,
-  ));
-
-  try {
-    return await completer.future;
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Failed to upload attachment: $e')),
-    );
-    return null;
+  @override
+  void dispose() {
+    _amountController.dispose();
+    _noteController.dispose();
+    _clientIdController.dispose();
+    _contactNoController.dispose();
+    _uploadSubscription?.cancel();
+    super.dispose();
   }
-}
-
-@override
-void dispose() {
-  _amountController.dispose();
-  _noteController.dispose();
-  _clientIdController.dispose();
-  _contactNoController.dispose();
-  _uploadSubscription?.cancel();
-  super.dispose();
-}
 }
 
 extension StringExtension on String {

@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_in.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_up.dart';
+import 'package:phcl_accounts/features/auth/domain/usecases/sign_out.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -10,9 +11,11 @@ part 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignIn signIn;
   final SignUp signUp;
+  final SignOut signOut;
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
-  AuthBloc({required this.signIn, required this.signUp}) : super(AuthInitial()) {
+  AuthBloc({required this.signIn, required this.signUp, required this.signOut})
+    : super(AuthInitial()) {
     on<CheckAuthStatusEvent>(_onCheckAuthStatus);
     on<SignInEvent>(_onSignInEvent);
     on<SignUpEvent>(_onSignUpEvent);
@@ -20,8 +23,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onCheckAuthStatus(
-    CheckAuthStatusEvent event, 
-    Emitter<AuthState> emit
+    CheckAuthStatusEvent event,
+    Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());
     try {
@@ -36,7 +39,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onSignInEvent(SignInEvent event, Emitter<AuthState> emit) async {
+  Future<void> _onSignInEvent(
+    SignInEvent event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
     try {
       await signIn.call(event.email, event.password);
@@ -46,15 +52,18 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onSignUpEvent(SignUpEvent event, Emitter<AuthState> emit) async {
+  Future<void> _onSignUpEvent(
+    SignUpEvent event,
+    Emitter<AuthState> emit,
+  ) async {
     emit(AuthLoading());
     try {
       await signUp.call(
-        event.email, 
+        event.email,
         event.password,
         event.name,
         event.contactNo,
-        event.role
+        event.role,
       );
       emit(AuthAuthenticated());
     } catch (e) {
@@ -62,7 +71,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  Future<void> _onSignOutEvent(SignOutEvent event, Emitter<AuthState> emit) async {
-    emit(AuthInitial());
+  Future<void> _onSignOutEvent(
+    SignOutEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      await signOut.call();
+      emit(AuthUnauthenticated());
+    } catch (e) {
+      emit(AuthError(e.toString()));
+    }
   }
 }

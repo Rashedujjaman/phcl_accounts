@@ -13,8 +13,34 @@ class SettingsPage extends StatelessWidget {
     'phoneNumber': '+1234567890',
     'email': 'admin@email.com',
     'imageUrl':
-        'https://media.licdn.com/dms/image/v2/D5635AQHjEiSIksEktw/profile-framedphoto-shrink_200_200/B56ZbaII3XGoAY-/0/1747416289034?e=1753020000&v=beta&t=Goc41KEA_pNtRb7YdTnDWjftBZOGxGbHqBk1vyukXg4',
+        'https://phclbd.com/wp-content/uploads/2025/03/cropped-Untitled_design__19_-removebg-preview-e1742456418321.png',
   };
+
+  void _signOutUser(BuildContext context) async {
+    // Show confirmation dialog first
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Confirm Logout'),
+        content: const Text('Are you sure you want to log out?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      // Trigger logout
+      context.read<AuthBloc>().add(SignOutEvent());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,73 +60,72 @@ class SettingsPage extends StatelessWidget {
               ),
             ),
             child: Center(
-              child:
-                  isLoading
-                      ? const CircularProgressIndicator()
-                      : Column(
-                        // mainAxisAlignment: MainAxisAlignment.center,
-                        spacing: 8,
-                        children: [
-                          // Text(
-                          //   'Profile',
-                          //   style: TextStyle(
-                          //     fontSize: 40,
-                          //     fontWeight: FontWeight.bold,
-                          //     color: Theme.of(context)
-                          //         .colorScheme
-                          //         .primary
-                          //         .withValues(
-                          //           alpha: 0.5,
-                          //         ),
-                          //   ),
-                          // ),
-                          const SizedBox(height: 20),
-                          CircleAvatar(
-                            radius: 50,
-                            backgroundColor:
-                                Theme.of(context).colorScheme.secondary,
-                            child:
-                                user['imageUrl'] != null &&
-                                        user['imageUrl']!.isNotEmpty
-                                    ? CircleAvatar(
-                                      // Inner circle for the Icon
-                                      radius:
-                                          49, // Slightly smaller to create the border
-                                      backgroundImage:
-                                          CachedNetworkImageProvider(
-                                            user['imageUrl']!,
-                                          ),
-                                    )
-                                    : const Icon(Icons.person, size: 50),
-                          ),
-                          // const SizedBox(height: 20),
-                          Shimmer.fromColors(
-                            baseColor: Theme.of(
-                              context,
-                            ).colorScheme.tertiary.withValues(alpha: 1),
-                            highlightColor: Colors.red,
-                            child: Text(
-                              user['lastName'] != null &&
-                                      user['lastName']!.isNotEmpty
-                                  ? user['lastName'] ?? ''
-                                  : user['fastName'] ?? '',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 22,
-                              ),
+              child: isLoading
+                  ? const CircularProgressIndicator()
+                  : Column(
+                      // mainAxisAlignment: MainAxisAlignment.center,
+                      spacing: 8,
+                      children: [
+                        // Text(
+                        //   'Profile',
+                        //   style: TextStyle(
+                        //     fontSize: 40,
+                        //     fontWeight: FontWeight.bold,
+                        //     color: Theme.of(context)
+                        //         .colorScheme
+                        //         .primary
+                        //         .withValues(
+                        //           alpha: 0.5,
+                        //         ),
+                        //   ),
+                        // ),
+                        const SizedBox(height: 20),
+                        CircleAvatar(
+                          radius: 50,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.secondary,
+                          child:
+                              user['imageUrl'] != null &&
+                                  user['imageUrl']!.isNotEmpty
+                              ? CircleAvatar(
+                                  // Inner circle for the Icon
+                                  radius:
+                                      49, // Slightly smaller to create the border
+                                  backgroundImage: CachedNetworkImageProvider(
+                                    user['imageUrl']!,
+                                  ),
+                                )
+                              : const Icon(Icons.person, size: 50),
+                        ),
+                        // const SizedBox(height: 20),
+                        Shimmer.fromColors(
+                          baseColor: Theme.of(
+                            context,
+                          ).colorScheme.tertiary.withValues(alpha: 1),
+                          highlightColor: Colors.red,
+                          child: Text(
+                            user['lastName'] != null &&
+                                    user['lastName']!.isNotEmpty
+                                ? user['lastName'] ?? ''
+                                : user['fastName'] ?? '',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 22,
                             ),
                           ),
-                          Text(
-                            user['phoneNumber']!,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          Text(
-                            user['email']!,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
+                        ),
+                        Text(
+                          user['phoneNumber']!,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        Text(
+                          user['email']!,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(height: 20),
+                      ],
+                    ),
             ),
           ),
           ListTile(
@@ -148,8 +173,7 @@ class SettingsPage extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             onTap: () {
-              context.read<AuthBloc>().add(SignOutEvent());
-              Navigator.pushReplacementNamed(context, '/login');
+              _signOutUser(context);
             },
           ),
         ],

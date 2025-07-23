@@ -9,6 +9,7 @@ import 'package:phcl_accounts/features/admin/presentation/pages/user_management_
 import 'package:phcl_accounts/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_in.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_up.dart';
+import 'package:phcl_accounts/features/auth/domain/usecases/sign_out.dart';
 import 'package:phcl_accounts/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:phcl_accounts/features/auth/presentation/pages/login_page.dart';
 import 'package:phcl_accounts/features/auth/presentation/pages/register_page.dart';
@@ -50,7 +51,8 @@ class MyApp extends StatelessWidget {
             firestore: FirebaseFirestore.instance,
             storage: FirebaseStorage.instance,
             auth: FirebaseAuth.instance,
-        )),
+          ),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -58,6 +60,7 @@ class MyApp extends StatelessWidget {
             create: (context) => AuthBloc(
               signIn: SignIn(context.read<AuthRepositoryImpl>()),
               signUp: SignUp(context.read<AuthRepositoryImpl>()),
+              signOut: SignOut(context.read<AuthRepositoryImpl>()),
             )..add(CheckAuthStatusEvent()),
           ),
           BlocProvider(
@@ -68,9 +71,8 @@ class MyApp extends StatelessWidget {
             )..add(LoadDashboardData()),
           ),
           BlocProvider(
-            create: (context) => TransactionBloc(
-              context.read<TransactionRepository>(),
-            )
+            create: (context) =>
+                TransactionBloc(context.read<TransactionRepository>()),
           ),
         ],
         child: MaterialApp(
@@ -98,20 +100,49 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.authStateChanges(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.active) {
-          final user = snapshot.data;
-          if (user != null) {
-            return const MainNavigation();
-          }
-          return LoginPage();
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is AuthError) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
         }
-        return const Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        );
       },
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          if (state is AuthAuthenticated) {
+            return const MainNavigation();
+          } else if (state is AuthUnauthenticated) {
+            return LoginPage();
+          } else if (state is AuthLoading) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          } else if (state is AuthError) {
+            return Scaffold(
+              body: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Authentication Error: ${state.message}'),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () {
+                        context.read<AuthBloc>().add(CheckAuthStatusEvent());
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          // Default loading state
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        },
+      ),
     );
   }
 }
