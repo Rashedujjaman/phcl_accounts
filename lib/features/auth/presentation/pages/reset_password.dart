@@ -19,9 +19,11 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       // Simulate API call
       await Future.delayed(const Duration(seconds: 2));
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Password reset link sent to your email')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Password reset link sent to your email')),
+        );
+      }
     }
   }
 
