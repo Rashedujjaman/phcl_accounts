@@ -15,7 +15,6 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveClientMixin {
   DateTimeRange? _dateRange;
-  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -25,11 +24,10 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
 
   @override
   void dispose() {
-    _scrollController.dispose();
     super.dispose();
   }
 
-    @override
+  @override
   bool get wantKeepAlive => true;
 
 

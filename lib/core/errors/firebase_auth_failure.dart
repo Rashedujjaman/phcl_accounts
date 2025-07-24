@@ -10,7 +10,7 @@ class FirebaseAuthFailure extends Equatable {
       case 'invalid-email':
         return const FirebaseAuthFailure('Email is not valid or badly formatted.');
       case 'invalid-credential':
-        return const FirebaseAuthFailure('Invalid password');
+        return const FirebaseAuthFailure('Invalid credential provided.');
       case 'user-disabled':
         return const FirebaseAuthFailure('This user has been disabled. Please contact support.');
       case 'user-not-found':

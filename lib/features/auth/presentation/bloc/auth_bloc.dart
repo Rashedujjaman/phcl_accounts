@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:phcl_accounts/core/errors/firebase_auth_failure.dart';
 import 'package:phcl_accounts/features/auth/domain/entities/user_entry.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/get_current_user.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_in.dart';
@@ -29,6 +30,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<SignOutEvent>(_onSignOutEvent);
   }
 
+  // Helper method to extract clean error messages
+  String _extractErrorMessage(dynamic error) {
+    if (error is FirebaseAuthFailure) {
+      return error.message;
+    }
+    // For other exceptions, try to extract meaningful message
+    String errorString = error.toString();
+    if (errorString.contains('FirebaseAuthFailure(') && errorString.contains(')')) {
+      // Extract message from "FirebaseAuthFailure(message)" format
+      int startIndex = errorString.indexOf('(') + 1;
+      int endIndex = errorString.lastIndexOf(')');
+      if (startIndex > 0 && endIndex > startIndex) {
+        return errorString.substring(startIndex, endIndex);
+      }
+    }
+    return errorString;
+  }
+
   Future<void> _onCheckAuthStatus(
     CheckAuthStatusEvent event,
     Emitter<AuthState> emit,
@@ -43,7 +62,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthUnauthenticated());
       }
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError(_extractErrorMessage(e)));
     }
   }
 
@@ -57,7 +76,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       final userEntity = await getCurrentUser.call();
       emit(AuthAuthenticated(userEntity));
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthSignInError(_extractErrorMessage(e)));
     }
   }
 
@@ -68,16 +87,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       await signUp.call(
-        event.email,
-        event.password,
-        event.name,
+        event.firstName,
+        event.lastName,
         event.contactNo,
         event.role,
+        event.email,
+        event.password,
       );
-      final userEntity = await getCurrentUser.call();
-      emit(AuthAuthenticated(userEntity));
+      emit(AuthSignUpSuccess());
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthSignUpError(_extractErrorMessage(e)));
     }
   }
 
@@ -90,7 +109,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await signOut.call();
       emit(AuthUnauthenticated());
     } catch (e) {
-      emit(AuthError('Logout failed: ${e.toString()}'));
+      emit(AuthSignOutError(_extractErrorMessage(e)));
     }
   }
 }

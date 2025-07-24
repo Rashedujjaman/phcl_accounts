@@ -25,22 +25,26 @@ class TransactionRepositoryImpl implements TransactionRepository {
       final userId = _auth.currentUser?.uid;
       if (userId == null) throw const FirebaseFailure('unauthenticated');
 
-      await _firestore.collection('transactions').add({
-        'type': transaction.type,
-        'category': transaction.category,
-        'date': transaction.date,
-        'amount': transaction.amount,
-        'clientId': transaction.clientId,
-        'contactNo': transaction.contactNo,
-        'note': transaction.note,
-        'attachmentUrl': transaction.attachmentUrl,
-        'attachmentType': transaction.attachmentType,
-        'createdBy': userId,
-        'createdAt': FieldValue.serverTimestamp(),
-        'isDeleted': false,
-        'updatedBy': '',
-        'deletedBy': '',
-      });
+      TransactionEntity newTransaction = TransactionEntity(
+        type: transaction.type,
+        category: transaction.category,
+        date: transaction.date,
+        amount: transaction.amount,
+        clientId: transaction.clientId,
+        contactNo: transaction.contactNo,
+        note: transaction.note,
+        attachmentUrl: transaction.attachmentUrl,
+        attachmentType: transaction.attachmentType,
+        createdBy: userId,
+        createdAt: DateTime.now(),
+        isDeleted: false,
+        updatedBy: '',
+        deletedBy: '',
+        updatedAt: DateTime.now(),
+      );
+
+      await _firestore.collection('transactions').add(newTransaction.toMap());
+
     } on FirebaseException catch (e) {
       throw FirebaseFailure.fromCode(e.code);
     } catch (e) {

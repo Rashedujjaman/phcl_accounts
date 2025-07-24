@@ -61,36 +61,31 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
-        return BlocListener<AuthBloc, AuthState>(
-          listener: (context, state) {
-            if (state is AuthError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Logout failed: ${state.message}')),
-              );
-            }
-          },
-          child: Scaffold(
-            body: ListView(
-              padding: const EdgeInsets.all(8.0),
-              children: [
-                Container(
-                  margin: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceDim,
-                    borderRadius: const BorderRadius.all(Radius.circular(30)),
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.tertiary,
-                      width: .5,
+        return BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, authState) {
+            return Scaffold(
+              body: ListView(
+                padding: const EdgeInsets.all(8.0),
+                children: [
+                  Container(
+                    margin: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceDim,
+                      borderRadius: const BorderRadius.all(Radius.circular(30)),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.tertiary,
+                        width: .5,
+                      ),
+                    ),
+                    child: Center(
+                      child: _buildUserProfile(authState),
                     ),
                   ),
-                  child: Center(
-                    child: _buildUserProfile(authState),
-                  ),
-                ),
-                _buildSettingsOptions(),
-              ],
-            ),
-          ),
+                  _buildSettingsOptions(),
+                ],
+              ),
+            );
+          }
         );
       },
     );
@@ -104,6 +99,13 @@ class _SettingsPageState extends State<SettingsPage> {
       );
     }
 
+    if (authState is AuthError) {
+      return Padding(
+        padding: const EdgeInsets.all(40.0),
+        child: Text('Error: ${authState.message}'),
+      );
+    }
+
     if (authState is AuthAuthenticated) {
       final user = authState.user;
       return Column(
@@ -113,10 +115,10 @@ class _SettingsPageState extends State<SettingsPage> {
           CircleAvatar(
             radius: 50,
             backgroundColor: Theme.of(context).colorScheme.secondary,
-            backgroundImage: user.imageUrl != null
+            backgroundImage: user.imageUrl != null && user.imageUrl != ''
                 ? NetworkImage(user.imageUrl!)
                 : null,
-            child: user.imageUrl == null 
+            child: user.imageUrl == null || user.imageUrl == ''
                 ? Icon(
                     Icons.person, 
                     color: Theme.of(context).colorScheme.surfaceDim,
@@ -128,7 +130,7 @@ class _SettingsPageState extends State<SettingsPage> {
             baseColor: Theme.of(context).colorScheme.tertiary.withValues(alpha: 1),
             highlightColor: Colors.red,
             child: Text(
-              user.name ?? 'Unknown User',
+              user.lastName ?? 'Unknown User',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 22,

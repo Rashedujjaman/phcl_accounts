@@ -22,6 +22,37 @@ class AuthAuthenticated extends AuthState {
 
 class AuthUnauthenticated extends AuthState {}
 
+class AuthSignUpSuccess extends AuthState {}
+
+class AuthSignUpError extends AuthState {
+  final String message;
+
+  const AuthSignUpError(this.message);
+
+  @override
+  List<Object> get props => [message];
+}
+
+class AuthSignInError extends AuthState {
+  final String message;
+
+  const AuthSignInError(this.message);
+
+  @override
+  List<Object> get props => [message];
+}
+
+class AuthSignOutSuccess extends AuthState {}
+
+class AuthSignOutError extends AuthState {
+  final String message;
+
+  const AuthSignOutError(this.message);
+
+  @override
+  List<Object> get props => [message];
+}
+
 class AuthError extends AuthState {
   final String message;
 

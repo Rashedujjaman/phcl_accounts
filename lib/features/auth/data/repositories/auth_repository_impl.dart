@@ -42,22 +42,28 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<void> signUp(
-    String email,
-    String password,
-    String name,
+    String firstName,
+    String lastName,
     String contactNo,
     String role,
+    String email,
+    String password,
   ) async {
     try {
       UserCredential userCredential = await _firebaseAuth
           .createUserWithEmailAndPassword(email: email, password: password);
 
       UserEntity user = UserEntity(
-        uid: userCredential.user!.uid,
-        email: email,
-        name: name,
+        firstName: firstName,
+        lastName: lastName,
         contactNo: contactNo,
         role: role,
+        email: email,
+        imageUrl: '',
+        isActive: true,
+        createdBy: userCredential.user!.uid,
+        createdAt: DateTime.now(),
+        uid: _firebaseAuth.currentUser?.uid,
       );
 
       await _firestore.collection('users').doc(user.uid).set(user.toMap());
@@ -75,19 +81,25 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<UserEntity> getCurrentUser() async {
-    User? user = _firebaseAuth.currentUser;
-    if (user == null) {
-      throw const FirebaseAuthFailure();
-    }
+    try {
+      User? user = _firebaseAuth.currentUser;
+      if (user == null) {
+        throw const FirebaseAuthFailure();
+      }
 
-    DocumentSnapshot doc = await _firestore
-        .collection('users')
-        .doc(user.uid)
-        .get();
-    if (!doc.exists) {
-      throw const FirebaseAuthFailure();
-    }
+      DocumentSnapshot doc = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      if (!doc.exists) {
+        throw const FirebaseAuthFailure();
+      }
 
-    return UserEntity.fromMap(doc.data() as Map<String, dynamic>);
+      return UserEntity.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+    } on FirebaseAuthException catch (e) {
+      throw FirebaseAuthFailure.fromCode(e.code);
+    } catch (e) {
+      throw FirebaseAuthFailure.fromCode(e.toString());
+    }
   }
 }
