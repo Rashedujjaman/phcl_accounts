@@ -9,6 +9,8 @@ class FirebaseAuthFailure extends Equatable {
     switch (code) {
       case 'invalid-email':
         return const FirebaseAuthFailure('Email is not valid or badly formatted.');
+      case 'invalid-credential':
+        return const FirebaseAuthFailure('Invalid password');
       case 'user-disabled':
         return const FirebaseAuthFailure('This user has been disabled. Please contact support.');
       case 'user-not-found':
@@ -25,6 +27,8 @@ class FirebaseAuthFailure extends Equatable {
         return const FirebaseAuthFailure('Too many requests. Try again later.');
       case 'network-request-failed':
         return const FirebaseAuthFailure('Network error. Check your internet connection.');
+      case 'channel-error':
+        return const FirebaseAuthFailure('Channel error. Please try again.');
       default:
         return const FirebaseAuthFailure();
     }

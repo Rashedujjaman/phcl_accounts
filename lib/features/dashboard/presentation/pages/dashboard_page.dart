@@ -13,7 +13,7 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> {
+class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveClientMixin {
   DateTimeRange? _dateRange;
   final ScrollController _scrollController = ScrollController();
 
@@ -28,6 +28,9 @@ class _DashboardPageState extends State<DashboardPage> {
     _scrollController.dispose();
     super.dispose();
   }
+
+    @override
+  bool get wantKeepAlive => true;
 
 
   void _loadInitialData() {
@@ -61,6 +64,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     return Scaffold(
       // appBar: AppBar(
       //   title: const Text('Dashboard'),

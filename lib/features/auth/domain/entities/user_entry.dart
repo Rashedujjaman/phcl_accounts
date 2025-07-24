@@ -4,6 +4,7 @@ class UserEntity {
   final String? name;
   final String? role;
   final String? contactNo;
+  final String? imageUrl;
   
   UserEntity({
     this.uid,
@@ -11,6 +12,7 @@ class UserEntity {
     this.name,
     this.role,
     this.contactNo,
+    this.imageUrl,
   });
 
   Map<String, dynamic> toMap() {
@@ -20,6 +22,7 @@ class UserEntity {
       'name': name,
       'role': role,
       'contactNo': contactNo,
+      'imageUrl': imageUrl,
     };
   }
 
@@ -30,6 +33,7 @@ class UserEntity {
       name: map['name'],
       role: map['role'],
       contactNo: map['contactNo'],
+      imageUrl: map['imageUrl'],
     );
   }
 }

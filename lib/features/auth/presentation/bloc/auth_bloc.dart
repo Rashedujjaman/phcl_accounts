@@ -1,6 +1,8 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:phcl_accounts/features/auth/domain/entities/user_entry.dart';
+import 'package:phcl_accounts/features/auth/domain/usecases/get_current_user.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_in.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_up.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_out.dart';
@@ -12,10 +14,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignIn signIn;
   final SignUp signUp;
   final SignOut signOut;
+  final GetCurrentUser getCurrentUser;
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
-  AuthBloc({required this.signIn, required this.signUp, required this.signOut})
-    : super(AuthInitial()) {
+  AuthBloc({
+    required this.signIn, 
+    required this.signUp, 
+    required this.signOut,
+    required this.getCurrentUser,
+  }) : super(AuthInitial()) {
     on<CheckAuthStatusEvent>(_onCheckAuthStatus);
     on<SignInEvent>(_onSignInEvent);
     on<SignUpEvent>(_onSignUpEvent);
@@ -30,7 +37,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = _firebaseAuth.currentUser;
       if (user != null) {
-        emit(AuthAuthenticated());
+        final userEntity = await getCurrentUser.call();
+        emit(AuthAuthenticated(userEntity));
       } else {
         emit(AuthUnauthenticated());
       }
@@ -46,7 +54,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(AuthLoading());
     try {
       await signIn.call(event.email, event.password);
-      emit(AuthAuthenticated());
+      final userEntity = await getCurrentUser.call();
+      emit(AuthAuthenticated(userEntity));
     } catch (e) {
       emit(AuthError(e.toString()));
     }
@@ -65,7 +74,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         event.contactNo,
         event.role,
       );
-      emit(AuthAuthenticated());
+      final userEntity = await getCurrentUser.call();
+      emit(AuthAuthenticated(userEntity));
     } catch (e) {
       emit(AuthError(e.toString()));
     }
@@ -80,7 +90,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       await signOut.call();
       emit(AuthUnauthenticated());
     } catch (e) {
-      emit(AuthError(e.toString()));
+      emit(AuthError('Logout failed: ${e.toString()}'));
     }
   }
 }

@@ -7,12 +7,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:phcl_accounts/core/widgets/main_navigation.dart';
 import 'package:phcl_accounts/features/admin/presentation/pages/user_management_page.dart';
 import 'package:phcl_accounts/features/auth/data/repositories/auth_repository_impl.dart';
+import 'package:phcl_accounts/features/auth/domain/usecases/get_current_user.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_in.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_up.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_out.dart';
 import 'package:phcl_accounts/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:phcl_accounts/features/auth/presentation/pages/login_page.dart';
 import 'package:phcl_accounts/features/auth/presentation/pages/register_page.dart';
+import 'package:phcl_accounts/features/auth/presentation/pages/reset_password.dart';
 import 'package:phcl_accounts/features/dashboard/data/repositories/dashboard_repository_impl.dart';
 import 'package:phcl_accounts/features/dashboard/domain/repositories/dashboard_repository.dart';
 import 'package:phcl_accounts/features/dashboard/domain/usecases/get_dashboard_data.dart';
@@ -61,6 +63,7 @@ class MyApp extends StatelessWidget {
               signIn: SignIn(context.read<AuthRepositoryImpl>()),
               signUp: SignUp(context.read<AuthRepositoryImpl>()),
               signOut: SignOut(context.read<AuthRepositoryImpl>()),
+              getCurrentUser: GetCurrentUser(context.read<AuthRepositoryImpl>()),
             )..add(CheckAuthStatusEvent()),
           ),
           BlocProvider(
@@ -86,8 +89,9 @@ class MyApp extends StatelessWidget {
           routes: {
             '/login': (context) => LoginPage(),
             '/register': (context) => RegisterPage(),
-            '/main-navigation': (context) => const MainNavigation(),
-            '/user-management': (context) => const UserManagementPage(),
+            '/reset-password': (context) => ResetPasswordPage(),
+            '/main-navigation': (context) => MainNavigation(),
+            '/user-management': (context) => UserManagementPage(),
           },
         ),
       ),
@@ -100,49 +104,18 @@ class AuthWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is AuthError) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.message)));
+    return StreamBuilder<User?>(
+      stream: FirebaseAuth.instance.authStateChanges(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasData) {
+          return const MainNavigation();
+        } else {
+          return LoginPage();
         }
       },
-      child: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          if (state is AuthAuthenticated) {
-            return const MainNavigation();
-          } else if (state is AuthUnauthenticated) {
-            return LoginPage();
-          } else if (state is AuthLoading) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
-          } else if (state is AuthError) {
-            return Scaffold(
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Authentication Error: ${state.message}'),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        context.read<AuthBloc>().add(CheckAuthStatusEvent());
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-          // Default loading state
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        },
-      ),
     );
   }
 }

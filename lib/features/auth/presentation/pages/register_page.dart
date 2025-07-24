@@ -24,7 +24,7 @@ class RegisterPage extends StatelessWidget {
               );
             }
             if (state is AuthAuthenticated) {
-              Navigator.pushReplacementNamed(context, '/dashboard');
+              Navigator.pushReplacementNamed(context, '/main-navigation');
             }
           },
           builder: (context, state) {

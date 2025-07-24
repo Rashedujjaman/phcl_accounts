@@ -69,7 +69,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
       return snapshot.docs.map((doc) => TransactionEntity.fromDocumentSnapshot(doc)
       ).toList();
     } on FirebaseException catch (e) {
-      print('Error fetching transactions: ${e.message}');
+      // print('Error fetching transactions: ${e.message}');
       throw FirebaseFailure.fromCode(e.code);
     } catch (e) {
       throw FirebaseFailure(e.toString());
