@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:phcl_accounts/features/admin/domain/usecases/get_all_users.dart';
 import 'package:phcl_accounts/features/admin/domain/usecases/update_user_role.dart';
@@ -28,11 +29,15 @@ class UserManagementBloc extends Bloc<UserManagementEvent, UserManagementState> 
 
   Future<void> _onLoadAllUsers(LoadAllUsers event, Emitter<UserManagementState> emit) async {
     try {
+      print('DEBUG: Starting to load all users...');
       emit(const UserManagementLoading());
+      
+      print('DEBUG: Using emit.forEach for stream...');
       
       await emit.forEach<List<UserEntity>>(
         _getAllUsers(),
         onData: (users) {
+          print('DEBUG: emit.forEach received ${users.length} users');
           return UserManagementLoaded(
             allUsers: users,
             filteredUsers: users,
@@ -41,11 +46,12 @@ class UserManagementBloc extends Bloc<UserManagementEvent, UserManagementState> 
           );
         },
         onError: (error, stackTrace) {
-          print('Stream subscription error: $error');
-          print('Stack trace: $stackTrace');
+          print('DEBUG: emit.forEach error: $error');
           return UserManagementError('Failed to load users: $error');
         },
       );
+      
+      print('DEBUG: emit.forEach completed');
     } catch (e) {
       print('Error in _onLoadAllUsers: $e');
       if (!emit.isDone) {
@@ -89,20 +95,20 @@ class UserManagementBloc extends Bloc<UserManagementEvent, UserManagementState> 
   Future<void> _onUpdateUserRole(UpdateUserRoleEvent event, Emitter<UserManagementState> emit) async {
     try {
       await _updateUserRole(event.userId, event.newRole);
-      emit(const UserManagementUpdateSuccess('User role updated successfully'));
+      // Don't emit success state - let the stream handle the data update
+      // Show success via a different mechanism (like using the listener for temporary states)
     } catch (error) {
-      emit(UserManagementUpdateError('Failed to update user role: $error'));
+      emit(UserManagementError('Failed to update user role: $error'));
     }
   }
 
   Future<void> _onUpdateUserStatus(UpdateUserStatusEvent event, Emitter<UserManagementState> emit) async {
     try {
       await _updateUserStatus(event.userId, event.isActive);
-      emit(UserManagementUpdateSuccess(
-        'User ${event.isActive ? 'activated' : 'deactivated'} successfully',
-      ));
+      // Don't emit success state - let the stream handle the data update
+      // Show success via a different mechanism (like using the listener for temporary states)
     } catch (error) {
-      emit(UserManagementUpdateError('Failed to update user status: $error'));
+      emit(UserManagementError('Failed to update user status: $error'));
     }
   }
 

@@ -12,7 +12,6 @@ class UserManagementRepositoryImpl implements UserManagementRepository {
     try {
       return _firestore
           .collection('users')
-          .orderBy('createdAt', descending: true)
           .snapshots()
           .map((snapshot) {
         final users = <UserEntity>[];
@@ -30,6 +29,14 @@ class UserManagementRepositoryImpl implements UserManagementRepository {
             continue;
           }
         }
+        
+        // Sort users by createdAt in Dart instead of Firestore to avoid query issues
+        users.sort((a, b) {
+          if (a.createdAt == null && b.createdAt == null) return 0;
+          if (a.createdAt == null) return 1;
+          if (b.createdAt == null) return -1;
+          return b.createdAt!.compareTo(a.createdAt!);
+        });
         
         return users;
       }).handleError((error, stackTrace) {

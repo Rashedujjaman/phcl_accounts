@@ -66,23 +66,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
       ),
       body: BlocConsumer<UserManagementBloc, UserManagementState>(
         listener: (context, state) {
-          if (state is UserManagementUpdateSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.green,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          } else if (state is UserManagementUpdateError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.message),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          } else if (state is UserManagementError) {
+          if (state is UserManagementError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
@@ -94,8 +78,23 @@ class _UserManagementPageState extends State<UserManagementPage> {
         },
         builder: (context, state) {
           if (state is UserManagementLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(height: 16),
+                  const Text('Loading users...'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      print('Manual reload button pressed');
+                      context.read<UserManagementBloc>().add(const LoadAllUsers());
+                    },
+                    child: const Text('Retry Load'),
+                  ),
+                ],
+              ),
             );
           }
           
@@ -275,18 +274,31 @@ class _UserManagementPageState extends State<UserManagementPage> {
         return;
       }
       
+      // Capture the page context that has access to UserManagementBloc
+      final pageContext = context;
+      
       showDialog(
         context: context,
-        builder: (context) => EditUserRoleDialog(
+        builder: (dialogContext) => EditUserRoleDialog(
           user: user,
           onRoleUpdated: (newRole) {
             try {
-              context.read<UserManagementBloc>().add(
+              // Use the page context instead of dialog context
+              pageContext.read<UserManagementBloc>().add(
                 UpdateUserRoleEvent(user.uid!, newRole),
+              );
+              
+              // Show success message immediately
+              ScaffoldMessenger.of(pageContext).showSnackBar(
+                const SnackBar(
+                  content: Text('User role updated successfully'),
+                  backgroundColor: Colors.green,
+                  behavior: SnackBarBehavior.floating,
+                ),
               );
             } catch (e) {
               print('Error updating user role: $e');
-              ScaffoldMessenger.of(context).showSnackBar(
+              ScaffoldMessenger.of(pageContext).showSnackBar(
                 SnackBar(
                   content: Text('Error updating user role: $e'),
                   backgroundColor: Colors.red,
@@ -307,7 +319,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
     }
   }
 
-  void _toggleUserStatus(UserEntity user, bool isActive) {
+  void _toggleUserStatus(UserEntity user, bool isActive) async {
     try {
       if (user.uid == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -319,8 +331,20 @@ class _UserManagementPageState extends State<UserManagementPage> {
         return;
       }
       
+      // Add the event to update the status
       context.read<UserManagementBloc>().add(
         UpdateUserStatusEvent(user.uid!, isActive),
+      );
+      
+      // Show success message immediately
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'User ${isActive ? 'activated' : 'deactivated'} successfully',
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
       );
     } catch (e) {
       print('Error toggling user status: $e');
