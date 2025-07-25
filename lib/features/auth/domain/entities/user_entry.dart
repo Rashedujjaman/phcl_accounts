@@ -1,4 +1,7 @@
-class UserEntity {
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:equatable/equatable.dart';
+
+class UserEntity extends Equatable {
   final String? uid;
   final String? firstName;
   final String? lastName;
@@ -23,6 +26,20 @@ class UserEntity {
     this.createdAt,
   });
 
+  @override
+  List<Object?> get props => [
+        uid,
+        firstName,
+        lastName,
+        contactNo,
+        role,
+        email,
+        imageUrl,
+        isActive,
+        createdBy,
+        createdAt,
+      ];
+
   Map<String, dynamic> toMap() {
     return {
       'uid': uid,
@@ -38,18 +55,44 @@ class UserEntity {
     };
   }
 
-  factory UserEntity.fromMap(String id,Map<String, dynamic> map) {
-    return UserEntity(
-      uid: id,
-      firstName: map['firstName'],
-      lastName: map['lastName'],
-      contactNo: map['contactNo'],
-      role: map['role'],
-      email: map['email'],
-      imageUrl: map['imageUrl'],
-      isActive: map['isActive'] ?? true,
-      createdBy: map['createdBy'],
-      createdAt: map['createdAt'].toDate(),
-    );
+  factory UserEntity.fromMap(String id, Map<String, dynamic> map) {
+    try {
+      // Handle createdAt safely
+      DateTime? createdAt;
+      final createdAtField = map['createdAt'];
+      if (createdAtField != null) {
+        if (createdAtField is Timestamp) {
+          createdAt = createdAtField.toDate();
+        } else if (createdAtField is String) {
+          createdAt = DateTime.tryParse(createdAtField);
+        } else if (createdAtField is int) {
+          createdAt = DateTime.fromMillisecondsSinceEpoch(createdAtField);
+        }
+      }
+
+      return UserEntity(
+        uid: id,
+        firstName: map['firstName']?.toString(),
+        lastName: map['lastName']?.toString(),
+        contactNo: map['contactNo']?.toString(),
+        role: map['role']?.toString() ?? 'user',
+        email: map['email']?.toString(),
+        imageUrl: map['imageUrl']?.toString(),
+        isActive: map['isActive'] ?? true,
+        createdBy: map['createdBy']?.toString(),
+        createdAt: createdAt,
+      );
+    } catch (e) {
+      // Return a minimal valid entity if parsing fails
+      return UserEntity(
+        uid: id,
+        firstName: 'Unknown',
+        lastName: 'User',
+        email: 'unknown@example.com',
+        role: 'user',
+        isActive: false,
+        createdAt: DateTime.now(),
+      );
+    }
   }
 }
