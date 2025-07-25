@@ -84,6 +84,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     SignUpEvent event,
     Emitter<AuthState> emit,
   ) async {
+    final currentState = state;
     emit(AuthLoading());
     try {
       await signUp.call(
@@ -95,8 +96,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         event.password,
       );
       emit(AuthSignUpSuccess());
+      emit(currentState);
     } catch (e) {
       emit(AuthSignUpError(_extractErrorMessage(e)));
+      emit(currentState);
     }
   }
 

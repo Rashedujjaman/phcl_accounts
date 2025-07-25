@@ -48,7 +48,6 @@ class _RegisterPageState extends State<RegisterPage> {
       // Hide keyboard
       FocusScope.of(context).unfocus();
       
-      
       context.read<AuthBloc>().add(SignUpEvent(
         _firstNameController.text.trim(),
         _lastNameController.text.trim(),
@@ -384,21 +383,21 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               onPressed: isLoading ? null : () => _registerUser(context),
                               child: isLoading
-                                  ? const SizedBox(
-                                      height: 20,
-                                      width: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                      ),
-                                    )
-                                  : const Text(
-                                      'Create Account',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                                     ),
+                                  )
+                                : const Text(
+                                    'Create Account',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                             ),
                           ),
                         ],
