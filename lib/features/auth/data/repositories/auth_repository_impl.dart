@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:phcl_accounts/features/auth/domain/repositories/auth_repository.dart';
 import 'package:phcl_accounts/features/auth/domain/entities/user_entry.dart';
 import 'package:phcl_accounts/core/errors/firebase_auth_failure.dart';
@@ -7,12 +9,15 @@ import 'package:phcl_accounts/core/errors/firebase_auth_failure.dart';
 class AuthRepositoryImpl implements AuthRepository {
   final FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
+  final FirebaseStorage _storage;
 
   AuthRepositoryImpl({
     required FirebaseAuth firebaseAuth,
     required FirebaseFirestore firestore,
+    required FirebaseStorage storage,
   }) : _firebaseAuth = firebaseAuth,
-       _firestore = firestore;
+       _firestore = firestore,
+       _storage = storage;
 
   @override
   Future<User?> signIn(String email, String password) async {
@@ -100,6 +105,49 @@ class AuthRepositoryImpl implements AuthRepository {
       throw FirebaseAuthFailure.fromCode(e.code);
     } catch (e) {
       throw FirebaseAuthFailure.fromCode(e.toString());
+    }
+  }
+
+  @override
+  Future<UserEntity> updateUserProfile({
+    required String userId,
+    String? firstName,
+    String? lastName,
+    String? contactNo,
+    File? profileImage,
+  }) async {
+    try {
+      Map<String, dynamic> updateData = {};
+      
+      if (firstName != null) updateData['firstName'] = firstName;
+      if (lastName != null) updateData['lastName'] = lastName;
+      if (contactNo != null) updateData['contactNo'] = contactNo;
+      
+      // Handle profile image upload
+      if (profileImage != null) {
+        final imageUrl = await _uploadProfileImage(userId, profileImage);
+        updateData['imageUrl'] = imageUrl;
+      }
+      
+      // Update Firestore document
+      await _firestore.collection('users').doc(userId).update(updateData);
+      
+      // Return updated user
+      return await getCurrentUser();
+    } on FirebaseAuthException catch (e) {
+      throw FirebaseAuthFailure.fromCode(e.code);
+    } catch (e) {
+      throw FirebaseAuthFailure.fromCode(e.toString());
+    }
+  }
+  
+  Future<String> _uploadProfileImage(String userId, File imageFile) async {
+    try {
+      final ref = _storage.ref().child('profile_images').child('$userId.jpg');
+      final uploadTask = await ref.putFile(imageFile);
+      return await uploadTask.ref.getDownloadURL();
+    } catch (e) {
+      throw FirebaseAuthFailure('Failed to upload profile image: $e');
     }
   }
 }

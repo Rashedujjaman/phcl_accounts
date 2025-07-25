@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:phcl_accounts/features/auth/presentation/bloc/auth_bloc.dart';
+import 'package:phcl_accounts/features/settings/presentation/widgets/edit_profile_bottomsheet.dart';
 import 'package:shimmer/shimmer.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -54,6 +55,18 @@ class _SettingsPageState extends State<SettingsPage> {
           SnackBar(content: Text('Error during logout: $e')),
         );
       }
+    }
+  }
+
+  void _showEditProfile(BuildContext context) {
+    final authState = context.read<AuthBloc>().state;
+    if (authState is AuthAuthenticated) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (context) => EditProfileBottomSheet(user: authState.user),
+      );
     }
   }
 
@@ -192,9 +205,7 @@ class _SettingsPageState extends State<SettingsPage> {
           leading: const Icon(Icons.account_circle),
           title: const Text('Profile'),
           trailing: const Icon(Icons.arrow_forward),
-          onTap: () {
-            // Navigator.pushNamed(context, '/profile');
-          },
+          onTap: () => _showEditProfile(context),
         ),
         BlocBuilder<AuthBloc, AuthState>(
           builder: (context, state) {

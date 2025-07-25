@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:phcl_accounts/features/auth/domain/entities/user_entry.dart'; 
 
 abstract class AuthRepository {
@@ -13,4 +14,11 @@ abstract class AuthRepository {
   Future<void> signOut();
   Future<bool> isSignedIn();
   Future<UserEntity> getCurrentUser();
+  Future<UserEntity> updateUserProfile({
+    required String userId,
+    String? firstName,
+    String? lastName,
+    String? contactNo,
+    File? profileImage,
+  });
 }

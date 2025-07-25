@@ -4,7 +4,7 @@ abstract class AuthEvent extends Equatable {
   const AuthEvent();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class CheckAuthStatusEvent extends AuthEvent {}
@@ -41,3 +41,22 @@ class SignUpEvent extends AuthEvent {
 }
 
 class SignOutEvent extends AuthEvent {}
+
+class UpdateProfileEvent extends AuthEvent {
+  final String userId;
+  final String? firstName;
+  final String? lastName;
+  final String? contactNo;
+  final File? profileImage;
+
+  const UpdateProfileEvent({
+    required this.userId,
+    this.firstName,
+    this.lastName,
+    this.contactNo,
+    this.profileImage,
+  });
+
+  @override
+  List<Object> get props => [userId, firstName ?? '', lastName ?? '', contactNo ?? ''];
+}

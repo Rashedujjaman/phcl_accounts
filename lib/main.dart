@@ -12,6 +12,7 @@ import 'package:phcl_accounts/features/auth/domain/usecases/get_current_user.dar
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_in.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_up.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_out.dart';
+import 'package:phcl_accounts/features/auth/domain/usecases/update_user_profile.dart';
 import 'package:phcl_accounts/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:phcl_accounts/features/auth/presentation/pages/login_page.dart';
 import 'package:phcl_accounts/features/auth/presentation/pages/register_page.dart';
@@ -41,6 +42,7 @@ class MyApp extends StatelessWidget {
           create: (context) => AuthRepositoryImpl(
             firebaseAuth: FirebaseAuth.instance,
             firestore: FirebaseFirestore.instance,
+            storage: FirebaseStorage.instance
           ),
         ),
         RepositoryProvider<DashboardRepository>(
@@ -65,6 +67,7 @@ class MyApp extends StatelessWidget {
               signUp: SignUp(context.read<AuthRepositoryImpl>()),
               signOut: SignOut(context.read<AuthRepositoryImpl>()),
               getCurrentUser: GetCurrentUser(context.read<AuthRepositoryImpl>()),
+              updateUserProfile: UpdateUserProfile(context.read<AuthRepositoryImpl>()),
             )..add(CheckAuthStatusEvent()),
           ),
           BlocProvider(

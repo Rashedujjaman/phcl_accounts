@@ -61,3 +61,23 @@ class AuthError extends AuthState {
   @override
   List<Object> get props => [message];
 }
+
+class ProfileUpdateLoading extends AuthState {}
+
+class ProfileUpdateSuccess extends AuthState {
+  final UserEntity updatedUser;
+
+  const ProfileUpdateSuccess(this.updatedUser);
+
+  @override
+  List<Object> get props => [updatedUser];
+}
+
+class ProfileUpdateError extends AuthState {
+  final String message;
+
+  const ProfileUpdateError(this.message);
+
+  @override
+  List<Object> get props => [message];
+}

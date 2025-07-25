@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,6 +8,7 @@ import 'package:phcl_accounts/features/auth/domain/usecases/get_current_user.dar
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_in.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_up.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_out.dart';
+import 'package:phcl_accounts/features/auth/domain/usecases/update_user_profile.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -16,6 +18,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final SignUp signUp;
   final SignOut signOut;
   final GetCurrentUser getCurrentUser;
+  final UpdateUserProfile updateUserProfile;
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
 
   AuthBloc({
@@ -23,11 +26,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     required this.signUp, 
     required this.signOut,
     required this.getCurrentUser,
+    required this.updateUserProfile,
   }) : super(AuthInitial()) {
     on<CheckAuthStatusEvent>(_onCheckAuthStatus);
     on<SignInEvent>(_onSignInEvent);
     on<SignUpEvent>(_onSignUpEvent);
     on<SignOutEvent>(_onSignOutEvent);
+    on<UpdateProfileEvent>(_onUpdateProfileEvent);
   }
 
   // Helper method to extract clean error messages
@@ -113,6 +118,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthUnauthenticated());
     } catch (e) {
       emit(AuthSignOutError(_extractErrorMessage(e)));
+    }
+  }
+
+  Future<void> _onUpdateProfileEvent(
+    UpdateProfileEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    final currentState = state;
+    emit(ProfileUpdateLoading());
+    try {
+      final updatedUser = await updateUserProfile.call(
+        userId: event.userId,
+        firstName: event.firstName,
+        lastName: event.lastName,
+        contactNo: event.contactNo,
+        profileImage: event.profileImage,
+      );
+      emit(ProfileUpdateSuccess(updatedUser));
+      emit(AuthAuthenticated(updatedUser));
+    } catch (e) {
+      emit(ProfileUpdateError(_extractErrorMessage(e)));
+      emit(currentState);
     }
   }
 }
