@@ -223,14 +223,14 @@ class _SettingsPageState extends State<SettingsPage> {
             return const SizedBox.shrink();
           },
         ),
-        ListTile(
-          leading: const Icon(Icons.notifications),
-          title: const Text('Notifications'),
-          trailing: const Icon(Icons.arrow_forward),
-          onTap: () {
-            // Navigator.pushNamed(context, '/notifications');
-          },
-        ),
+        // ListTile(
+        //   leading: const Icon(Icons.notifications),
+        //   title: const Text('Notifications'),
+        //   trailing: const Icon(Icons.arrow_forward),
+        //   onTap: () {
+        //     // Navigator.pushNamed(context, '/notifications');
+        //   },
+        // ),
         ListTile(
           leading: const Icon(Icons.dark_mode),
           trailing: Switch(

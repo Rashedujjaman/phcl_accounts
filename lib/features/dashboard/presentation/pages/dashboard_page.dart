@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:phcl_accounts/features/dashboard/presentation/bloc/dashboard_bloc.dart';
-import 'package:phcl_accounts/features/dashboard/presentation/widgets/date_range_selector.dart';
+import 'package:phcl_accounts/core/widgets/date_range_selector.dart';
 import 'package:phcl_accounts/features/dashboard/domain/entities/dashboard_data.dart';
 import 'package:phcl_accounts/features/dashboard/presentation/widgets/pie_chart.dart';
 

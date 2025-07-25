@@ -39,10 +39,9 @@ class TransactionEntity {
 
   Map<String, dynamic> toMap() {
     return {
-      'id': id,
       'type': type,
       'category': category,
-      'date': date.toIso8601String(),
+      'date': date,
       'amount': amount,
       'clientId': clientId,
       'contactNo': contactNo,
@@ -54,7 +53,7 @@ class TransactionEntity {
       'updatedBy': updatedBy,
       'isDeleted': isDeleted,
       'deletedBy': deletedBy,
-      'updatedAt': updatedAt?.toIso8601String(),
+      'updatedAt': updatedAt,
     };
   }
 
