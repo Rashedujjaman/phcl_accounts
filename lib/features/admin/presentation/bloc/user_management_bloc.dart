@@ -29,16 +29,12 @@ class UserManagementBloc extends Bloc<UserManagementEvent, UserManagementState> 
 
   Future<void> _onLoadAllUsers(LoadAllUsers event, Emitter<UserManagementState> emit) async {
     try {
-      print('DEBUG: Starting to load all users...');
-      emit(const UserManagementLoading());
-      
-      print('DEBUG: Using emit.forEach for stream...');
+      emit(const UsersLoading());
       
       await emit.forEach<List<UserEntity>>(
         _getAllUsers(),
         onData: (users) {
-          print('DEBUG: emit.forEach received ${users.length} users');
-          return UserManagementLoaded(
+          return UsersLoaded(
             allUsers: users,
             filteredUsers: users,
             searchQuery: '',
@@ -46,23 +42,19 @@ class UserManagementBloc extends Bloc<UserManagementEvent, UserManagementState> 
           );
         },
         onError: (error, stackTrace) {
-          print('DEBUG: emit.forEach error: $error');
-          return UserManagementError('Failed to load users: $error');
+          return UsersLoadingError('Failed to load users: $error');
         },
       );
-      
-      print('DEBUG: emit.forEach completed');
     } catch (e) {
-      print('Error in _onLoadAllUsers: $e');
       if (!emit.isDone) {
-        emit(UserManagementError('Failed to initialize user loading: $e'));
+        emit(UsersLoadingError('Failed to initialize user loading: $e'));
       }
     }
   }
 
   void _onSearchUsers(SearchUsers event, Emitter<UserManagementState> emit) {
-    if (state is UserManagementLoaded) {
-      final currentState = state as UserManagementLoaded;
+    if (state is UsersLoaded) {
+      final currentState = state as UsersLoaded;
       final filteredUsers = _filterUsers(
         currentState.allUsers,
         event.query,
@@ -77,8 +69,8 @@ class UserManagementBloc extends Bloc<UserManagementEvent, UserManagementState> 
   }
 
   void _onFilterUsersByRole(FilterUsersByRole event, Emitter<UserManagementState> emit) {
-    if (state is UserManagementLoaded) {
-      final currentState = state as UserManagementLoaded;
+    if (state is UsersLoaded) {
+      final currentState = state as UsersLoaded;
       final filteredUsers = _filterUsers(
         currentState.allUsers,
         currentState.searchQuery,
@@ -95,55 +87,40 @@ class UserManagementBloc extends Bloc<UserManagementEvent, UserManagementState> 
   Future<void> _onUpdateUserRole(UpdateUserRoleEvent event, Emitter<UserManagementState> emit) async {
     try {
       await _updateUserRole(event.userId, event.newRole);
-      // Don't emit success state - let the stream handle the data update
-      // Show success via a different mechanism (like using the listener for temporary states)
     } catch (error) {
-      emit(UserManagementError('Failed to update user role: $error'));
+      emit(UserRoleUpdateError('Failed to update user role: $error'));
     }
   }
 
   Future<void> _onUpdateUserStatus(UpdateUserStatusEvent event, Emitter<UserManagementState> emit) async {
     try {
       await _updateUserStatus(event.userId, event.isActive);
-      // Don't emit success state - let the stream handle the data update
-      // Show success via a different mechanism (like using the listener for temporary states)
     } catch (error) {
-      emit(UserManagementError('Failed to update user status: $error'));
+      emit(UserStatusUpdateError('Failed to update user status: $error'));
     }
   }
 
   List<UserEntity> _filterUsers(List<UserEntity> users, String searchQuery, String roleFilter) {
-    try {
-      return users.where((user) {
-        // Role filter
-        if (roleFilter != 'all' && user.role != roleFilter) {
-          return false;
-        }
+    return users.where((user) {
+      // Role filter
+      if (roleFilter != 'all' && user.role != roleFilter) {
+        return false;
+      }
+      
+      // Search filter
+      if (searchQuery.isNotEmpty) {
+        final firstName = (user.firstName ?? '').toLowerCase();
+        final lastName = (user.lastName ?? '').toLowerCase();
+        final email = (user.email ?? '').toLowerCase();
+        final fullName = '$firstName $lastName';
+        final query = searchQuery.toLowerCase();
         
-        // Search filter
-        if (searchQuery.isNotEmpty) {
-          final firstName = (user.firstName ?? '').toLowerCase();
-          final lastName = (user.lastName ?? '').toLowerCase();
-          final email = (user.email ?? '').toLowerCase();
-          final fullName = '$firstName $lastName';
-          final query = searchQuery.toLowerCase();
-          
-          return fullName.contains(query) || 
-                 email.contains(query) ||
-                 firstName.contains(query) ||
-                 lastName.contains(query);
-        }
-        
-        return true;
-      }).toList();
-    } catch (e) {
-      print('Error filtering users: $e');
-      return users; // Return unfiltered list if filtering fails
-    }
-  }
-
-  @override
-  Future<void> close() {
-    return super.close();
+        return fullName.contains(query) || 
+               email.contains(query) ||
+               firstName.contains(query) ||
+               lastName.contains(query);
+      }
+      return true;
+    }).toList();
   }
 }

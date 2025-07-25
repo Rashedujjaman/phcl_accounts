@@ -13,7 +13,7 @@ class UserEntity extends Equatable {
   final String? createdBy;
   final DateTime? createdAt;
   
-  UserEntity({
+  const UserEntity({
     this.uid,
     this.firstName,
     this.lastName,

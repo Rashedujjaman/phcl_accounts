@@ -12,17 +12,17 @@ class UserManagementInitial extends UserManagementState {
   const UserManagementInitial();
 }
 
-class UserManagementLoading extends UserManagementState {
-  const UserManagementLoading();
+class UsersLoading extends UserManagementState {
+  const UsersLoading();
 }
 
-class UserManagementLoaded extends UserManagementState {
+class UsersLoaded extends UserManagementState {
   final List<UserEntity> allUsers;
   final List<UserEntity> filteredUsers;
   final String searchQuery;
   final String selectedRoleFilter;
 
-  const UserManagementLoaded({
+  const UsersLoaded({
     required this.allUsers,
     required this.filteredUsers,
     required this.searchQuery,
@@ -32,13 +32,13 @@ class UserManagementLoaded extends UserManagementState {
   @override
   List<Object?> get props => [allUsers, filteredUsers, searchQuery, selectedRoleFilter];
 
-  UserManagementLoaded copyWith({
+  UsersLoaded copyWith({
     List<UserEntity>? allUsers,
     List<UserEntity>? filteredUsers,
     String? searchQuery,
     String? selectedRoleFilter,
   }) {
-    return UserManagementLoaded(
+    return UsersLoaded(
       allUsers: allUsers ?? this.allUsers,
       filteredUsers: filteredUsers ?? this.filteredUsers,
       searchQuery: searchQuery ?? this.searchQuery,
@@ -47,32 +47,28 @@ class UserManagementLoaded extends UserManagementState {
   }
 }
 
-class UserManagementError extends UserManagementState {
+class UsersLoadingError extends UserManagementState {
   final String message;
 
-  const UserManagementError(this.message);
+  const UsersLoadingError(this.message);
 
   @override
   List<Object?> get props => [message];
 }
 
-class UserManagementUpdateLoading extends UserManagementState {
-  const UserManagementUpdateLoading();
-}
-
-class UserManagementUpdateSuccess extends UserManagementState {
+class UserRoleUpdateError extends UserManagementState {
   final String message;
 
-  const UserManagementUpdateSuccess(this.message);
+  const UserRoleUpdateError(this.message);
 
   @override
   List<Object?> get props => [message];
 }
 
-class UserManagementUpdateError extends UserManagementState {
+class UserStatusUpdateError extends UserManagementState {
   final String message;
 
-  const UserManagementUpdateError(this.message);
+  const UserStatusUpdateError(this.message);
 
   @override
   List<Object?> get props => [message];

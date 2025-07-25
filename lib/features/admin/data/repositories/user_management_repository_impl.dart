@@ -24,8 +24,6 @@ class UserManagementRepositoryImpl implements UserManagementRepository {
               users.add(user);
             }
           } catch (e) {
-            print('Error parsing user document ${doc.id}: $e');
-            // Skip invalid documents but continue processing others
             continue;
           }
         }
@@ -40,12 +38,10 @@ class UserManagementRepositoryImpl implements UserManagementRepository {
         
         return users;
       }).handleError((error, stackTrace) {
-        print('Firestore stream error: $error');
-        print('Stack trace: $stackTrace');
+
         throw Exception('Failed to fetch users: $error');
       });
     } catch (e) {
-      print('Error setting up Firestore stream: $e');
       // Return an empty stream instead of throwing
       return Stream.value(<UserEntity>[]);
     }
@@ -58,7 +54,6 @@ class UserManagementRepositoryImpl implements UserManagementRepository {
         'role': role,
       });
     } catch (e) {
-      print('Error updating user role: $e');
       throw Exception('Failed to update user role: $e');
     }
   }
@@ -70,7 +65,6 @@ class UserManagementRepositoryImpl implements UserManagementRepository {
         'isActive': isActive,
       });
     } catch (e) {
-      print('Error updating user status: $e');
       throw Exception('Failed to update user status: $e');
     }
   }

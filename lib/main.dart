@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:phcl_accounts/core/widgets/main_navigation.dart';
 import 'package:phcl_accounts/features/admin/presentation/pages/user_management_wrapper.dart';
-import 'package:phcl_accounts/features/admin/presentation/pages/user_management_debug_page.dart';
+import 'package:phcl_accounts/features/admin/presentation/pages/user_management_page.dart';
 import 'package:phcl_accounts/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/get_current_user.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_in.dart';
@@ -93,7 +93,7 @@ class MyApp extends StatelessWidget {
             '/reset-password': (context) => ResetPasswordPage(),
             '/main-navigation': (context) => MainNavigation(),
             '/user-management': (context) => UserManagementWrapper(),
-            '/debug-users': (context) => UserManagementDebugPage(),
+            '/debug-users': (context) => UserManagementPage(),
           },
         ),
       ),

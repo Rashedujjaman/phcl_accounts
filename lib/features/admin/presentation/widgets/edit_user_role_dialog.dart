@@ -111,7 +111,7 @@ class _EditUserRoleDialogState extends State<EditUserRoleDialog> {
           ),
           borderRadius: BorderRadius.circular(8),
           color: selectedRole == value 
-              ? Theme.of(context).primaryColor.withOpacity(0.05)
+              ? Theme.of(context).primaryColor.withValues(alpha: 0.05)
               : null,
         ),
         child: Row(
