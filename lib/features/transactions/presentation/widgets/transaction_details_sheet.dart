@@ -99,16 +99,16 @@ class TransactionDetailsSheet extends StatelessWidget {
                   
                   // Transaction Details
                   _buildDetailRow('Date', DateFormat('MMM dd, yyyy - hh:mm a').format(transaction.date)),
-                  if (transaction.clientId != null)
+                  if (transaction.clientId != null && transaction.clientId != '')
                     _buildDetailRow('Client ID', transaction.clientId!),
-                  if (transaction.contactNo != null)
+                  if (transaction.contactNo != null && transaction.contactNo != '')
                     _buildDetailRow('Contact No', transaction.contactNo!),
-                  if (transaction.note != null)
+                  if (transaction.note != null && transaction.note != '')
                     _buildDetailRow('Note', transaction.note!),
                   if (transaction.id != null)
                     _buildDetailRow('Transaction ID', transaction.id!),
                   
-                  if (transaction.attachmentUrl != null) ...[
+                  if (transaction.attachmentUrl != null && transaction.attachmentUrl != '') ...[
                     const SizedBox(height: 16),
                     _buildAttachmentSection(),
                   ],
@@ -159,17 +159,21 @@ class TransactionDetailsSheet extends StatelessWidget {
   }
 
   Widget _buildAttachmentSection() {
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Attachment',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
+        SizedBox(
+          width: 120,
+          child: Text(
+            'Attachment',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
-        const SizedBox(height: 12),
+        const Text(':'),
+        const SizedBox(width: 8),
         AttachmentViewer(
           url: transaction.attachmentUrl!, 
           fileName: '${transaction.category}_${transaction.id}_attachment',
@@ -242,13 +246,14 @@ class TransactionDetailsSheet extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 100,
+            width: 120,
             child: Text(
               label,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          const SizedBox(width: 16),
+          const Text(':'),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               value,
