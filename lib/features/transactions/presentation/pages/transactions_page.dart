@@ -68,12 +68,12 @@ class _TransactionsPageState extends State<TransactionsPage> {
           children: [
             // Enhanced Date Range Selector
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -151,15 +151,15 @@ class _TransactionsPageState extends State<TransactionsPage> {
         FloatingActionButton(
           heroTag: 'add_income',
           onPressed: () => _navigateToAddTransaction(context, 'income'),
-          backgroundColor: Colors.green[100],
-          child: const Icon(Icons.add, color: Colors.green),
+          backgroundColor: Theme.of(context).colorScheme.tertiary,
+          child: Icon(Icons.add),
         ),
         const SizedBox(height: 16),
         FloatingActionButton(
           heroTag: 'add_expense',
           onPressed: () => _navigateToAddTransaction(context, 'expense'),
-          backgroundColor: Colors.red[100],
-          child: const Icon(Icons.remove, color: Colors.red),
+          backgroundColor: Theme.of(context).colorScheme.errorContainer,
+          child: Icon(Icons.remove),
         ),
       ],
     );
@@ -173,14 +173,14 @@ class _TransactionsPageState extends State<TransactionsPage> {
           Icon(
             Icons.receipt_long,
             size: 64,
-            color: Colors.grey[400],
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 16),
           Text(
             'No transactions found',
             style: TextStyle(
               fontSize: 18,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -189,7 +189,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
             'Add your first transaction to get started',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[500],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -205,14 +205,14 @@ class _TransactionsPageState extends State<TransactionsPage> {
           Icon(
             Icons.error_outline,
             size: 64,
-            color: Colors.red[400],
+            color: Theme.of(context).colorScheme.error,
           ),
           const SizedBox(height: 16),
           Text(
             'Something went wrong',
             style: TextStyle(
               fontSize: 18,
-              color: Colors.grey[600],
+              color: Theme.of(context).colorScheme.onSurface,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -221,7 +221,7 @@ class _TransactionsPageState extends State<TransactionsPage> {
             message,
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[500],
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
             textAlign: TextAlign.center,
           ),
@@ -251,43 +251,46 @@ class _TransactionsPageState extends State<TransactionsPage> {
         if (state is! TransactionLoaded) return const SizedBox();
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
           child: Row(
             children: [
               FilterChip(
-                label: const Text('All'),
+                label: const Text('All', style: TextStyle(fontSize: 12)),
                 selected: state.currentType == null,
                 onSelected: (_) => _onTypeChanged(null),
                 selectedColor: Theme.of(context).colorScheme.primary,
-                checkmarkColor: Colors.white,
+                checkmarkColor: Theme.of(context).colorScheme.onPrimary,
                 labelStyle: TextStyle(
-                  color: state.currentType == null ? Colors.white : null,
+                  color: state.currentType == null ? Theme.of(context).colorScheme.onPrimary : null,
                   fontWeight: FontWeight.w500,
                 ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               ),
               const SizedBox(width: 8),
               FilterChip(
-                label: const Text('Income'),
+                label: const Text('Income', style: TextStyle(fontSize: 12)),
                 selected: state.currentType == 'income',
                 onSelected: (_) => _onTypeChanged('income'),
-                selectedColor: Colors.green,
-                checkmarkColor: Colors.white,
+                selectedColor: Theme.of(context).colorScheme.tertiary,
+                checkmarkColor: Theme.of(context).colorScheme.onTertiary,
                 labelStyle: TextStyle(
-                  color: state.currentType == 'income' ? Colors.white : null,
+                  color: state.currentType == 'income' ? Theme.of(context).colorScheme.onTertiary : null,
                   fontWeight: FontWeight.w500,
                 ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               ),
               const SizedBox(width: 8),
               FilterChip(
-                label: const Text('Expense'),
+                label: const Text('Expense', style: TextStyle(fontSize: 12)),
                 selected: state.currentType == 'expense',
                 onSelected: (_) => _onTypeChanged('expense'),
-                selectedColor: Colors.red,
-                checkmarkColor: Colors.white,
+                selectedColor: Theme.of(context).colorScheme.error,
+                checkmarkColor: Theme.of(context).colorScheme.onError,
                 labelStyle: TextStyle(
-                  color: state.currentType == 'expense' ? Colors.white : null,
+                  color: state.currentType == 'expense' ? Theme.of(context).colorScheme.onError : null,
                   fontWeight: FontWeight.w500,
                 ),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               ),
             ],
           ),

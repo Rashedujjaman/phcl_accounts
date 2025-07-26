@@ -113,8 +113,8 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
                 ),
                 if (_selectedImage != null)
                   ListTile(
-                    leading: const Icon(Icons.delete, color: Colors.red),
-                    title: const Text('Remove Photo', style: TextStyle(color: Colors.red)),
+                    leading: Icon(Icons.delete, color: Theme.of(context).colorScheme.error),
+                    title: Text('Remove Photo', style: TextStyle(color: Theme.of(context).colorScheme.error)),
                     onTap: () => Navigator.pop(context, 'remove'),
                   ),
               ],
@@ -161,7 +161,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error picking image: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -206,9 +206,9 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
             });
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Profile updated successfully!'),
-                backgroundColor: Colors.green,
+              SnackBar(
+                content: const Text('Profile updated successfully!'),
+                backgroundColor: Theme.of(context).colorScheme.primary,
               ),
             );
           }
@@ -220,7 +220,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Error updating profile: ${state.message}'),
-                backgroundColor: Colors.red,
+                backgroundColor: Theme.of(context).colorScheme.error,
               ),
             );
           }
@@ -245,7 +245,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error updating profile: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -254,6 +254,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return AnimatedBuilder(
       animation: _slideAnimation,
       builder: (context, child) {
@@ -264,9 +265,9 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
       },
       child: Container(
         height: MediaQuery.of(context).size.height * 0.85,
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(25),
             topRight: Radius.circular(25),
           ),
@@ -279,7 +280,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
               height: 4,
               width: 80,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: theme.colorScheme.outline,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -305,7 +306,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.close),
                     style: IconButton.styleFrom(
-                      backgroundColor: Colors.grey[100],
+                      backgroundColor: theme.colorScheme.surfaceContainerHigh,
                     ),
                   ),
                 ],
@@ -331,13 +332,13 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Theme.of(context).primaryColor,
+                                  color: theme.colorScheme.primary,
                                   width: 3,
                                 ),
                               ),
                               child: CircleAvatar(
                                 radius: 58,
-                                backgroundColor: Colors.grey[200],
+                                backgroundColor: theme.colorScheme.surfaceContainerHigh,
                                 backgroundImage: _selectedImage != null
                                     ? FileImage(_selectedImage!)
                                     : (widget.user.imageUrl != null && widget.user.imageUrl!.isNotEmpty
@@ -348,7 +349,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
                                     ? Icon(
                                         Icons.person,
                                         size: 60,
-                                        color: Colors.grey[400],
+                                        color: theme.colorScheme.onSurfaceVariant,
                                       )
                                     : null,
                               ),
@@ -362,13 +363,13 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
                                   width: 36,
                                   height: 36,
                                   decoration: BoxDecoration(
-                                    color: Theme.of(context).primaryColor,
+                                    color: theme.colorScheme.primary,
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white, width: 2),
+                                    border: Border.all(color: theme.colorScheme.surface, width: 2),
                                   ),
-                                  child: const Icon(
+                                  child: Icon(
                                     Icons.camera_alt,
-                                    color: Colors.white,
+                                    color: theme.colorScheme.onPrimary,
                                     size: 18,
                                   ),
                                 ),
@@ -385,7 +386,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
                             child: Text(
                               _imagePickerError,
                               style: TextStyle(
-                                color: Colors.red,
+                                color: theme.colorScheme.error,
                                 fontSize: 14,
                               ),
                             ),
@@ -465,9 +466,9 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
                         width: double.infinity,
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: Colors.grey[50],
+                          color: theme.colorScheme.surfaceContainerLow,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey[300]!),
+                          border: Border.all(color: theme.colorScheme.outline),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -476,7 +477,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
                               children: [
                                 Icon(
                                   Icons.badge_outlined,
-                                  color: Colors.grey[600],
+                                  color: theme.colorScheme.onSurfaceVariant,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
@@ -484,7 +485,7 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
                                   'Role',
                                   style: TextStyle(
                                     fontWeight: FontWeight.w500,
-                                    color: Colors.grey[700],
+                                    color: theme.colorScheme.onSurface,
                                   ),
                                 ),
                                 const SizedBox(width: 50),
@@ -496,8 +497,8 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
                                   ),
                                   child: Text(
                                     (widget.user.role ?? 'user').toUpperCase(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
+                                    style: TextStyle(
+                                      color: theme.colorScheme.onPrimary,
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -520,9 +521,9 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: theme.colorScheme.surface,
                 border: Border(
-                  top: BorderSide(color: Colors.grey[200]!),
+                  top: BorderSide(color: theme.colorScheme.outline),
                 ),
               ),
               child: SizedBox(
@@ -532,21 +533,21 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
                   onPressed: (_isLoading || !_hasChanges) ? null : _saveProfile,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _isLoading || _hasChanges 
-                        ? Theme.of(context).primaryColor 
-                        : Colors.grey[300],
-                    foregroundColor: _isLoading || _hasChanges ? Colors.white : Colors.grey[600],
+                        ? theme.colorScheme.primary 
+                        : theme.colorScheme.surfaceContainerHigh,
+                    foregroundColor: _isLoading || _hasChanges ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                     elevation: 0,
                   ),
                   child: _isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
                           ),
                         )
                       : Text(
@@ -568,10 +569,10 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: Colors.black87,
+        color: Theme.of(context).colorScheme.onSurface,
       ),
     );
   }
@@ -594,35 +595,36 @@ class _EditProfileBottomSheetState extends State<EditProfileBottomSheet> with Ti
         prefixIcon: Icon(icon),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Theme.of(context).primaryColor),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
         ),
         disabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[200]!),
+          borderSide: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
         ),
         filled: !enabled,
-        fillColor: enabled ? null : Colors.grey[50],
+        fillColor: enabled ? null : Theme.of(context).colorScheme.surfaceContainerLow,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );
   }
 
   Color _getRoleColor(String role) {
+    final theme = Theme.of(context);
     switch (role.toLowerCase()) {
       case 'admin':
-        return Colors.red;
+        return theme.colorScheme.error;
       case 'user':
-        return Colors.blue;
+        return theme.colorScheme.primary;
       default:
-        return Colors.grey;
+        return theme.colorScheme.secondary;
     }
   }
 }

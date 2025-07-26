@@ -44,7 +44,7 @@ class LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           final isLoading = state is AuthLoading;
@@ -96,7 +96,7 @@ class LoginPageState extends State<LoginPage> {
                             style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.blueGrey[800],
+                                  color: Theme.of(context).colorScheme.primary,
                                 ),
                             textAlign: TextAlign.center,
                           ),

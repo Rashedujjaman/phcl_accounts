@@ -13,7 +13,7 @@ class PieChart extends StatelessWidget {
   Widget build(BuildContext context) {
     return SfCircularChart(
       title: ChartTitle(text: title),
-      borderColor: borderColor ?? Colors.transparent,
+      borderColor: borderColor ?? Theme.of(context).colorScheme.outline,
       borderWidth: 1,
       tooltipBehavior: TooltipBehavior(enable: true),
       legend: const Legend(

@@ -68,7 +68,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   onPressed: _isLoading ? null : _resetPassword,
                   child:
                       _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
+                          ? CircularProgressIndicator(color: Theme.of(context).colorScheme.onPrimary)
                           : const Text('Send Reset Link'),
                 ),
               ),

@@ -97,6 +97,7 @@ class _EditUserRoleDialogState extends State<EditUserRoleDialog> {
   }
 
   Widget _buildRoleRadio(String value, String title, String description) {
+    final theme = Theme.of(context);
     return InkWell(
       onTap: () => setState(() => selectedRole = value),
       borderRadius: BorderRadius.circular(8),
@@ -106,12 +107,12 @@ class _EditUserRoleDialogState extends State<EditUserRoleDialog> {
         decoration: BoxDecoration(
           border: Border.all(
             color: selectedRole == value 
-                ? Theme.of(context).primaryColor 
+                ? theme.colorScheme.primary 
                 : Colors.grey[300]!,
           ),
           borderRadius: BorderRadius.circular(8),
           color: selectedRole == value 
-              ? Theme.of(context).primaryColor.withValues(alpha: 0.05)
+              ? theme.colorScheme.primary.withValues(alpha: .1)
               : null,
         ),
         child: Row(
@@ -120,7 +121,7 @@ class _EditUserRoleDialogState extends State<EditUserRoleDialog> {
               value: value,
               groupValue: selectedRole,
               onChanged: (newValue) => setState(() => selectedRole = newValue!),
-              activeColor: Theme.of(context).primaryColor,
+              activeColor: theme.colorScheme.primary,
             ),
             Expanded(
               child: Column(
@@ -131,7 +132,7 @@ class _EditUserRoleDialogState extends State<EditUserRoleDialog> {
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
                       color: selectedRole == value 
-                          ? Theme.of(context).primaryColor 
+                          ? theme.colorScheme.primary 
                           : null,
                     ),
                   ),

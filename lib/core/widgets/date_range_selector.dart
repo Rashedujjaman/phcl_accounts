@@ -177,6 +177,7 @@ class _PresetButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: ChoiceChip(
@@ -185,21 +186,21 @@ class _PresetButton extends StatelessWidget {
         onSelected: (_) => onPressed(),
         labelStyle: TextStyle(
           fontSize: 12,
-          color: selected 
-              ? Theme.of(context).colorScheme.onPrimary 
-              : Theme.of(context).textTheme.bodyMedium?.color,
+          color: selected
+              ? theme.colorScheme.onPrimary
+              : theme.textTheme.bodyMedium?.color,
         ),
-        selectedColor: Theme.of(context).colorScheme.secondary,
-        backgroundColor: Theme.of(context).colorScheme.surface,
+        selectedColor: theme.colorScheme.primary,
+        backgroundColor: theme.colorScheme.surface,
         showCheckmark: false,
         side: BorderSide(
-          color: Theme.of(context).dividerColor,
+          color: theme.colorScheme.outline,
           width: 1,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       ),
     );
   }

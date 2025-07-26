@@ -26,12 +26,12 @@ class UserDetailsDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            _buildDetailRow('Name', '${user.firstName ?? ''} ${user.lastName ?? ''}'.trim()),
-            _buildDetailRow('Email', user.email ?? 'N/A'),
-            _buildDetailRow('Contact', user.contactNo ?? 'N/A'),
-            _buildDetailRow('Role', user.role ?? 'N/A'),
-            _buildDetailRow('Status', (user.isActive ?? true) ? 'Active' : 'Inactive'),
-            _buildDetailRow('Created', _formatDate(user.createdAt)),
+            _buildDetailRow(context, 'Name', '${user.firstName ?? ''} ${user.lastName ?? ''}'.trim()),
+            _buildDetailRow(context, 'Email', user.email ?? 'N/A'),
+            _buildDetailRow(context, 'Contact', user.contactNo ?? 'N/A'),
+            _buildDetailRow(context, 'Role', user.role ?? 'N/A'),
+            _buildDetailRow(context, 'Status', (user.isActive ?? true) ? 'Active' : 'Inactive'),
+            _buildDetailRow(context, 'Created', _formatDate(user.createdAt)),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
@@ -48,7 +48,7 @@ class UserDetailsDialog extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(String label, String value) {
+  Widget _buildDetailRow(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -60,7 +60,7 @@ class UserDetailsDialog extends StatelessWidget {
               '$label:',
               style: TextStyle(
                 fontWeight: FontWeight.w500,
-                color: Colors.grey[700],
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
               ),
             ),
           ),

@@ -147,10 +147,11 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
   }
 
   Widget _buildSummaryCards(DashboardData data) {
+    final theme = Theme.of(context);
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.green.shade100, Colors.red.shade100],
+          colors: [theme.colorScheme.primaryContainer, theme.colorScheme.errorContainer],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -173,26 +174,26 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: data.netBalance >= 0 ? Colors.green : Colors.red,
+                    color: data.netBalance >= 0 ? theme.colorScheme.primary : theme.colorScheme.error,
                   ),
                 ),
               ],
             ),
-            const Divider(
+            Divider(
               thickness: 1,
               height: 24,
-              color: Colors.grey,
+              color: theme.colorScheme.outline,
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Total In (+):',
-                  style: TextStyle(fontSize: 16, color: Colors.green),
+                  style: TextStyle(fontSize: 16, color: theme.colorScheme.primary),
                 ),
                 Text(
                   '৳${data.totalIncome.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 16, color: Colors.green),
+                  style: TextStyle(fontSize: 16, color: theme.colorScheme.primary),
                 ),
               ],
             ),
@@ -200,20 +201,20 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
+                Text(
                   'Total Out (-):',
-                  style: TextStyle(fontSize: 16, color: Colors.red),
+                  style: TextStyle(fontSize: 16, color: theme.colorScheme.error),
                 ),
                 Text(
                   '৳${data.totalExpense.toStringAsFixed(2)}',
-                  style: const TextStyle(fontSize: 16, color: Colors.red),
+                  style: TextStyle(fontSize: 16, color: theme.colorScheme.error),
                 ),
               ],
             ),
-            const Divider(
+            Divider(
               thickness: 1,
               height: 24,
-              color: Colors.grey,
+              color: theme.colorScheme.outline,
             ),
           ],
         ),
@@ -222,18 +223,20 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
   }
 
   Widget _buildExpenseCategoryDistributionChart(DashboardData data) {
+    final theme = Theme.of(context);
     return PieChart(
       data: data.expenseCategoryDistribution,
       title: 'Expense Breakdown',
-      borderColor: Colors.red,
+      borderColor: theme.colorScheme.error,
     );
   }
 
   Widget _buildIncomeCategoryDistributionChart(DashboardData data) {
+    final theme = Theme.of(context);
     return PieChart(
       data: data.incomeCategoryDistribution,
       title: 'Income Breakdown',
-      borderColor: Colors.green,
+      borderColor: theme.colorScheme.primary,
     );
   }
 
@@ -259,6 +262,7 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
   }
 
   Widget _buildIncomeVsExpenseChart(DashboardData data) {
+    final theme = Theme.of(context);
     return SfCartesianChart(
       title: const ChartTitle(text: 'Income vs Expense'),
       primaryXAxis: const CategoryAxis(),
@@ -268,7 +272,7 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
           xValueMapper: (ChartData data, _) => data.key,
           yValueMapper: (ChartData data, _) => data.value,
           name: 'Income',
-          color: Colors.green,
+          color: theme.colorScheme.primary,
           dataLabelSettings: const DataLabelSettings(
             isVisible: true,
             labelAlignment: ChartDataLabelAlignment.auto,
@@ -280,7 +284,7 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
           xValueMapper: (ChartData data, _) => data.key,
           yValueMapper: (ChartData data, _) => data.value,
           name: 'Expense',
-          color: Colors.red,
+          color: theme.colorScheme.error,
           dataLabelSettings: const DataLabelSettings(
             isVisible: true,
             labelAlignment: ChartDataLabelAlignment.auto,

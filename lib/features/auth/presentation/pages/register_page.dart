@@ -61,15 +61,16 @@ class _RegisterPageState extends State<RegisterPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: const Text('Create New Account'),
-        backgroundColor: Colors.green,
+        backgroundColor: theme.colorScheme.primary,
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.blueGrey[800]),
+        iconTheme: IconThemeData(color: theme.colorScheme.onPrimary),
         titleTextStyle: TextStyle(
-          color: Colors.blueGrey[800],
+          color: theme.colorScheme.onPrimary,
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
@@ -79,9 +80,9 @@ class _RegisterPageState extends State<RegisterPage> {
           if (state is AuthSignUpSuccess) {
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('User created successfully!'),
-                backgroundColor: Colors.green,
+              SnackBar(
+                content: const Text('User created successfully!'),
+                backgroundColor: theme.colorScheme.primary,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -91,21 +92,21 @@ class _RegisterPageState extends State<RegisterPage> {
               context: context,
               barrierDismissible: false,
               builder: (context) => AlertDialog(
-              backgroundColor: Colors.red,
-              title: const Text(
+              backgroundColor: theme.colorScheme.errorContainer,
+              title: Text(
                 'Registration Failed',
-                style: TextStyle(color: Colors.white),
+                style: TextStyle(color: theme.colorScheme.onErrorContainer),
               ),
               content:  Text(
                 state.message,
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: theme.colorScheme.onErrorContainer),
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text(
+                  child: Text(
                     'OK',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: theme.colorScheme.onErrorContainer),
                   ),
                 ),
               ],
@@ -133,12 +134,12 @@ class _RegisterPageState extends State<RegisterPage> {
                                   'https://phclbd.com/wp-content/uploads/2025/03/cropped-Untitled_design__19_-removebg-preview-e1742456418321.png',
                               placeholder: (context, url) =>
                                   Shimmer.fromColors(
-                                    baseColor: Colors.grey[300]!,
-                                    highlightColor: Colors.grey[100]!,
+                                    baseColor: theme.colorScheme.outline,
+                                    highlightColor: theme.colorScheme.surface,
                                     child: Container(
                                       width: 180,
                                       height: 60,
-                                      color: Colors.white,
+                                      color: theme.colorScheme.surface,
                                     ),
                                   ),
                               errorWidget: (context, url, error) =>
@@ -161,7 +162,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               errorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: Colors.red),
+                                borderSide: BorderSide(color: theme.colorScheme.error),
                               ),
                             ),
                             textInputAction: TextInputAction.next,
@@ -187,7 +188,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               errorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: Colors.red),
+                                borderSide: BorderSide(color: theme.colorScheme.error),
                               ),
                             ),
                             textInputAction: TextInputAction.next,
@@ -213,7 +214,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               errorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: Colors.red),
+                                borderSide: BorderSide(color: theme.colorScheme.error),
                               ),
                             ),
                             keyboardType: TextInputType.emailAddress,
@@ -241,7 +242,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               errorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: Colors.red),
+                                borderSide: BorderSide(color: theme.colorScheme.error),
                               ),
                             ),
                             keyboardType: TextInputType.phone,
@@ -269,7 +270,7 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               errorBorder: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8),
-                                borderSide: const BorderSide(color: Colors.red),
+                                borderSide: BorderSide(color: theme.colorScheme.error),
                               ),
                             ),
                             obscureText: true,
@@ -290,7 +291,7 @@ class _RegisterPageState extends State<RegisterPage> {
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                             decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey[400]!),
+                              border: Border.all(color: theme.colorScheme.outline),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Column(
@@ -302,7 +303,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w500,
-                                      color: Colors.blueGrey[700],
+                                      color: theme.colorScheme.onSurface,
                                     ),
                                   ),
                                 ),
@@ -383,12 +384,12 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               onPressed: isLoading ? null : () => _registerUser(context),
                               child: isLoading
-                                ? const SizedBox(
+                                ? SizedBox(
                                     height: 20,
                                     width: 20,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                      valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.onPrimary),
                                     ),
                                   )
                                 : const Text(

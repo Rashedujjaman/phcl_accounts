@@ -35,21 +35,22 @@ class _UserManagementPageState extends State<UserManagementPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: const Text(
           'User Management',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.blueGrey[800],
+        backgroundColor: theme.colorScheme.surface,
+        foregroundColor: theme.colorScheme.onSurface,
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(
             height: 1,
-            color: Colors.grey[200],
+            color: theme.colorScheme.outline,
           ),
         ),
       ),
@@ -59,7 +60,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: theme.colorScheme.error,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -67,7 +68,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: theme.colorScheme.error,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -75,7 +76,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: theme.colorScheme.error,
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -104,14 +105,14 @@ class _UserManagementPageState extends State<UserManagementPage> {
                   Icon(
                     Icons.error_outline,
                     size: 64,
-                    color: Colors.grey[400],
+                    color: theme.colorScheme.error,
                   ),
                   const SizedBox(height: 16),
                   Text(
                     'Error loading users',
                     style: TextStyle(
                       fontSize: 18,
-                      color: Colors.grey[600],
+                      color: theme.colorScheme.onSurface,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -120,7 +121,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
                     state.message,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[500],
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -158,7 +159,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
                   child: state.filteredUsers.isEmpty
                       ? _buildEmptyState(state.searchQuery, state.selectedRoleFilter)
                       : ListView.builder(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           itemCount: state.filteredUsers.length,
                           itemBuilder: (context, index) {
                             final user = state.filteredUsers[index];
@@ -186,13 +187,14 @@ class _UserManagementPageState extends State<UserManagementPage> {
         },
         icon: const Icon(Icons.person_add),
         label: const Text('Add User'),
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
+        // backgroundColor: theme.colorScheme.primary,
+        // foregroundColor: theme.colorScheme.onPrimary,
       ),
     );
   }
 
   Widget _buildEmptyState(String searchQuery, String roleFilter) {
+    final theme = Theme.of(context);
     String message;
     if (searchQuery.isNotEmpty) {
       message = 'No users found matching "$searchQuery"';
@@ -209,14 +211,14 @@ class _UserManagementPageState extends State<UserManagementPage> {
           Icon(
             Icons.people_outline,
             size: 64,
-            color: Colors.grey[400],
+            color: theme.colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 16),
           Text(
             message,
             style: TextStyle(
               fontSize: 18,
-              color: Colors.grey[600],
+              color: theme.colorScheme.onSurface,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -225,7 +227,7 @@ class _UserManagementPageState extends State<UserManagementPage> {
             'Try adjusting your search or filters',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.grey[500],
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],
@@ -236,9 +238,9 @@ class _UserManagementPageState extends State<UserManagementPage> {
   void _showUserDetails(UserEntity user) {
     if (user.uid == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('User information is not available'),
-          backgroundColor: Colors.orange,
+        SnackBar(
+          content: const Text('User information is not available'),
+          backgroundColor: Theme.of(context).colorScheme.secondary,
         ),
       );
       return;
@@ -253,9 +255,9 @@ class _UserManagementPageState extends State<UserManagementPage> {
   void _showEditUserDialog(UserEntity user) {
     if (user.uid == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cannot edit user: User ID is missing'),
-          backgroundColor: Colors.orange,
+        SnackBar(
+          content: const Text('Cannot edit user: User ID is missing'),
+          backgroundColor: Theme.of(context).colorScheme.secondary,
         ),
       );
       return;
@@ -279,9 +281,9 @@ class _UserManagementPageState extends State<UserManagementPage> {
   void _toggleUserStatus(UserEntity user, bool isActive) {
     if (user.uid == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cannot update user: User ID is missing'),
-          backgroundColor: Colors.orange,
+        SnackBar(
+          content: const Text('Cannot update user: User ID is missing'),
+          backgroundColor: Theme.of(context).colorScheme.secondary,
         ),
       );
       return;

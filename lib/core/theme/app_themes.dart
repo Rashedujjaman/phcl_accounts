@@ -13,7 +13,7 @@ class AppThemes {
       onPrimary: Color(0xFFFFFFFF),
       secondary: Color(0xFF03DAC6), // Teal
       onSecondary: Color(0xFF000000),
-      tertiary: Color(0xFF9C27B0), // Purple
+      tertiary: Color(0xFF43A047), // Green (for income)
       onTertiary: Color(0xFFFFFFFF),
       error: Color(0xFFFF5722), // Deep Orange
       onError: Color(0xFFFFFFFF),
@@ -47,7 +47,7 @@ class AppThemes {
         foregroundColor: lightColorScheme.onSurface,
         elevation: 0,
         scrolledUnderElevation: 1,
-        shadowColor: lightColorScheme.shadow.withOpacity(0.1),
+        shadowColor: lightColorScheme.shadow.withValues(alpha: 0.1),
         centerTitle: true,
         titleTextStyle: TextStyle(
           color: lightColorScheme.onSurface,
@@ -59,7 +59,7 @@ class AppThemes {
       // Card theme
       cardTheme: CardThemeData(
         color: lightColorScheme.surfaceContainer,
-        shadowColor: lightColorScheme.shadow.withOpacity(0.1),
+        shadowColor: lightColorScheme.shadow.withValues(alpha: 0.1),
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -72,7 +72,7 @@ class AppThemes {
           backgroundColor: lightColorScheme.primary,
           foregroundColor: lightColorScheme.onPrimary,
           elevation: 2,
-          shadowColor: lightColorScheme.shadow.withOpacity(0.2),
+          shadowColor: lightColorScheme.shadow.withValues(alpha: 0.2),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
@@ -157,13 +157,13 @@ class AppThemes {
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return lightColorScheme.primary;
+            return lightColorScheme.surfaceBright;
           }
           return lightColorScheme.outline;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return lightColorScheme.primaryContainer;
+            return lightColorScheme.primary;
           }
           return lightColorScheme.surfaceContainerHighest;
         }),
@@ -174,7 +174,6 @@ class AppThemes {
         backgroundColor: lightColorScheme.primary,
         foregroundColor: lightColorScheme.onPrimary,
         elevation: 6,
-        shape: const CircleBorder(),
       ),
 
       // Dialog theme
@@ -208,8 +207,8 @@ class AppThemes {
       onPrimary: Color(0xFF0D47A1),
       secondary: Color(0xFF4DB6AC), // Light Teal
       onSecondary: Color(0xFF00251A),
-      tertiary: Color(0xFFCE93D8), // Light Purple
-      onTertiary: Color(0xFF4A148C),
+      tertiary: Color(0xFF66BB6A), // Green (for income)
+      onTertiary: Color(0xFF003916),
       error: Color(0xFFFF8A65), // Light Deep Orange
       onError: Color(0xFF5D1049),
       surface: Color(0xFF121212), // Very dark grey
@@ -242,7 +241,7 @@ class AppThemes {
         foregroundColor: darkColorScheme.onSurface,
         elevation: 0,
         scrolledUnderElevation: 1,
-        shadowColor: darkColorScheme.shadow.withOpacity(0.3),
+        shadowColor: darkColorScheme.shadow.withValues(alpha: 0.3),
         centerTitle: true,
         titleTextStyle: TextStyle(
           color: darkColorScheme.onSurface,
@@ -254,7 +253,7 @@ class AppThemes {
       // Card theme
       cardTheme: CardThemeData(
         color: darkColorScheme.surfaceContainer,
-        shadowColor: darkColorScheme.shadow.withOpacity(0.3),
+        shadowColor: darkColorScheme.shadow.withValues(alpha: 0.3),
         elevation: 2,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -267,7 +266,7 @@ class AppThemes {
           backgroundColor: darkColorScheme.primary,
           foregroundColor: darkColorScheme.onPrimary,
           elevation: 2,
-          shadowColor: darkColorScheme.shadow.withOpacity(0.4),
+          shadowColor: darkColorScheme.shadow.withValues(alpha: 0.4),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8),
           ),
@@ -352,24 +351,24 @@ class AppThemes {
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return darkColorScheme.primary;
+            return darkColorScheme.surfaceBright;
           }
           return darkColorScheme.outline;
         }),
         trackColor: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return darkColorScheme.primaryContainer;
+            return darkColorScheme.onSurface;
           }
           return darkColorScheme.surfaceContainerHighest;
         }),
+
       ),
 
       // Floating action button theme
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: darkColorScheme.primary,
-        foregroundColor: darkColorScheme.onPrimary,
+        backgroundColor: darkColorScheme.onSurfaceVariant,
+        foregroundColor: darkColorScheme.shadow,
         elevation: 6,
-        shape: const CircleBorder(),
       ),
 
       // Dialog theme

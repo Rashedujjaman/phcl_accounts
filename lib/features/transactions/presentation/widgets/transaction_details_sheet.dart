@@ -11,14 +11,15 @@ class TransactionDetailsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final isIncome = transaction.type == 'income';
-    final color = isIncome ? Colors.green : Colors.red;
+    final color = isIncome ? theme.colorScheme.primary : theme.colorScheme.error;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.only(
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(25),
           topRight: Radius.circular(25),
         ),
@@ -31,7 +32,7 @@ class TransactionDetailsSheet extends StatelessWidget {
             height: 4,
             width: 80,
             decoration: BoxDecoration(
-              color: Colors.grey[300],
+              color: theme.colorScheme.outline,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -124,6 +125,7 @@ class TransactionDetailsSheet extends StatelessWidget {
   }
 
   Widget _buildActionButtons(BuildContext context) {
+    final theme = Theme.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -132,8 +134,8 @@ class TransactionDetailsSheet extends StatelessWidget {
           icon: const Icon(Icons.share),
           tooltip: 'Share Receipt',
           style: IconButton.styleFrom(
-            backgroundColor: Colors.blue[50],
-            foregroundColor: Colors.blue[700],
+            backgroundColor: theme.colorScheme.primaryContainer,
+            foregroundColor: theme.colorScheme.onPrimaryContainer,
           ),
         ),
         const SizedBox(width: 8),
@@ -142,8 +144,8 @@ class TransactionDetailsSheet extends StatelessWidget {
           icon: const Icon(Icons.download),
           tooltip: 'Download Receipt',
           style: IconButton.styleFrom(
-            backgroundColor: Colors.green[50],
-            foregroundColor: Colors.green[700],
+            backgroundColor: theme.colorScheme.secondaryContainer,
+            foregroundColor: theme.colorScheme.onSecondaryContainer,
           ),
         ),
         const SizedBox(width: 8),
@@ -151,7 +153,7 @@ class TransactionDetailsSheet extends StatelessWidget {
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.close),
           style: IconButton.styleFrom(
-            backgroundColor: Colors.grey[100],
+            backgroundColor: theme.colorScheme.surfaceContainerHigh,
           ),
         ),
       ],
@@ -196,7 +198,7 @@ class TransactionDetailsSheet extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to share receipt: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }
@@ -216,7 +218,7 @@ class TransactionDetailsSheet extends StatelessWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to download receipt: $e'),
-            backgroundColor: Colors.red,
+            backgroundColor: Theme.of(context).colorScheme.error,
           ),
         );
       }

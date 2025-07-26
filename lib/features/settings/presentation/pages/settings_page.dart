@@ -144,7 +144,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           Shimmer.fromColors(
             baseColor: Theme.of(context).colorScheme.tertiary.withValues(alpha: 1),
-            highlightColor: Colors.red,
+            highlightColor: Theme.of(context).colorScheme.error,
             child: Text(
               user.lastName ?? 'Unknown User',
               style: const TextStyle(
@@ -172,8 +172,8 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               child: Text(
                 user.role!.toUpperCase(),
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onError,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
@@ -193,11 +193,11 @@ class _SettingsPageState extends State<SettingsPage> {
   Color _getRoleColor(String role) {
     switch (role.toLowerCase()) {
       case 'admin':
-        return Colors.red;
+        return Theme.of(context).colorScheme.error;
       case 'user':
-        return Colors.blue;
+        return Theme.of(context).colorScheme.primary;
       default:
-        return Colors.grey;
+        return Theme.of(context).colorScheme.outline;
     }
   }
 
@@ -279,8 +279,8 @@ class _SettingsPageState extends State<SettingsPage> {
           },
         ),
         ListTile(
-          iconColor: Colors.red,
-          textColor: Colors.red,
+          iconColor: Theme.of(context).colorScheme.error,
+          textColor: Theme.of(context).colorScheme.error,
           leading: const Icon(Icons.exit_to_app),
           title: const Text(
             'Log Out',

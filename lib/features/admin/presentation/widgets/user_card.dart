@@ -17,6 +17,7 @@ class UserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
@@ -32,11 +33,11 @@ class UserCard extends StatelessWidget {
                 // Avatar
                 CircleAvatar(
                   radius: 24,
-                  backgroundColor: _getRoleColor(user.role ?? 'user').withOpacity(0.2),
+                  backgroundColor: _getRoleColor(user.role ?? 'user', theme).withValues(alpha: 0.2),
                   child: Text(
                     _getInitials(user.firstName ?? '', user.lastName ?? ''),
                     style: TextStyle(
-                      color: _getRoleColor(user.role ?? 'user'),
+                      color: _getRoleColor(user.role ?? 'user', theme),
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
@@ -51,7 +52,7 @@ class UserCard extends StatelessWidget {
                       Text(
                         '${user.firstName ?? ''} ${user.lastName ?? ''}'.trim(),
                         style: const TextStyle(
-                          fontSize: 16,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -59,8 +60,8 @@ class UserCard extends StatelessWidget {
                       Text(
                         user.email ?? '',
                         style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
+                          fontSize: 12,
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ],
@@ -72,14 +73,12 @@ class UserCard extends StatelessWidget {
                     Switch(
                       value: user.isActive ?? true,
                       onChanged: onToggleStatus,
-                      activeColor: Colors.green,
-                      inactiveThumbColor: Colors.grey,
                     ),
                     Text(
                       (user.isActive ?? true) ? 'Active' : 'Inactive',
                       style: TextStyle(
                         fontSize: 12,
-                        color: (user.isActive ?? true) ? Colors.green : Colors.grey,
+                        color: (user.isActive ?? true) ? theme.colorScheme.primary : theme.colorScheme.outline,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -93,25 +92,25 @@ class UserCard extends StatelessWidget {
               children: [
                 // Contact Number
                 if (user.contactNo?.isNotEmpty == true) ...[
-                  Icon(Icons.phone, size: 16, color: Colors.grey[600]),
+                  Icon(Icons.phone, size: 16, color: theme.colorScheme.onSurfaceVariant),
                   const SizedBox(width: 4),
                   Text(
                     user.contactNo!,
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.grey[600],
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                   const SizedBox(width: 16),
                 ],
                 // Creation Date
-                Icon(Icons.calendar_today, size: 16, color: Colors.grey[600]),
+                Icon(Icons.calendar_today, size: 16, color: theme.colorScheme.onSurfaceVariant),
                 const SizedBox(width: 4),
                 Text(
                   _formatDate(user.createdAt),
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.grey[600],
+                    color: theme.colorScheme.onSurfaceVariant,
                   ),
                 ),
                 const Spacer(),
@@ -119,10 +118,10 @@ class UserCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getRoleColor(user.role ?? 'user').withOpacity(0.1),
+                    color: _getRoleColor(user.role ?? 'user', theme).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: _getRoleColor(user.role ?? 'user').withOpacity(0.3),
+                      color: _getRoleColor(user.role ?? 'user', theme).withValues(alpha: 0.3),
                     ),
                   ),
                   child: Text(
@@ -130,7 +129,7 @@ class UserCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: _getRoleColor(user.role ?? 'user'),
+                      color: _getRoleColor(user.role ?? 'user', theme),
                     ),
                   ),
                 ),
@@ -146,7 +145,8 @@ class UserCard extends StatelessWidget {
                   icon: const Icon(Icons.edit, size: 18),
                   label: const Text('Edit Role'),
                   style: TextButton.styleFrom(
-                    foregroundColor: Theme.of(context).primaryColor,
+                    foregroundColor: theme.colorScheme.onSurfaceVariant,
+                    backgroundColor: theme.colorScheme.surfaceContainerHigh,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -155,7 +155,8 @@ class UserCard extends StatelessWidget {
                   icon: const Icon(Icons.info_outline, size: 18),
                   label: const Text('Details'),
                   style: TextButton.styleFrom(
-                    foregroundColor: Colors.grey[600],
+                    foregroundColor: theme.colorScheme.onSurfaceVariant,
+                    backgroundColor: theme.colorScheme.surfaceContainerHigh,
                   ),
                 ),
               ],
@@ -172,16 +173,16 @@ class UserCard extends StatelessWidget {
     return '$first$last';
   }
 
-  Color _getRoleColor(String role) {
+  Color _getRoleColor(String role, ThemeData theme) {
     switch (role.toLowerCase()) {
       case 'admin':
-        return Colors.red;
+        return theme.colorScheme.error;
       case 'user':
-        return Colors.blue;
+        return theme.colorScheme.primary;
       case 'viewer':
-        return Colors.green;
+        return theme.colorScheme.secondary;
       default:
-        return Colors.grey;
+        return theme.colorScheme.outline;
     }
   }
 

@@ -322,7 +322,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                       return Container(
                         width: 60,
                         height: 60,
-                        color: Colors.grey[200],
+                        color: Theme.of(context).colorScheme.surfaceContainerHigh,
                         child: const Center(child: CircularProgressIndicator()),
                       );
                     },
@@ -332,7 +332,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                     width: 60,
                     height: 60,
                     decoration: BoxDecoration(
-                      color: Colors.grey[200],
+                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Center(
@@ -344,10 +344,10 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                             : Icons.insert_drive_file,
                         size: 32,
                         color: isPdf
-                            ? Colors.red
+                            ? Theme.of(context).colorScheme.error
                             : isWord
-                            ? Colors.blue
-                            : Colors.grey,
+                            ? Theme.of(context).colorScheme.primary
+                            : Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ),
                   ),
@@ -373,12 +373,18 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                             : isWord
                             ? 'Word Document'
                             : 'File',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant, 
+                          fontSize: 12
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${(fileSize / 1024).toStringAsFixed(1)} KB',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant, 
+                          fontSize: 12
+                        ),
                       ),
                     ],
                   ),

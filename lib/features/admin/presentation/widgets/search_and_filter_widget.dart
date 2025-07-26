@@ -20,9 +20,10 @@ class SearchAndFilterWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.all(16),
+      color: theme.colorScheme.surface,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
         children: [
           // Search Bar
@@ -39,18 +40,18 @@ class SearchAndFilterWidget extends StatelessWidget {
                   : null,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
+                borderSide: BorderSide(color: theme.colorScheme.outline),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(color: Colors.grey[300]!),
+                borderSide: BorderSide(color: theme.colorScheme.outline),
               ),
               filled: true,
-              fillColor: Colors.grey[50],
+              fillColor: theme.colorScheme.surfaceContainerLow,
             ),
             onChanged: onSearchChanged,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           // Role Filter Chips
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
@@ -72,16 +73,17 @@ class SearchAndFilterWidget extends StatelessWidget {
   }
 
   Widget _buildFilterChip(BuildContext context, String value, String label) {
+    final theme = Theme.of(context);
     final isSelected = selectedRoleFilter == value;
     return FilterChip(
       label: Text(label),
       selected: isSelected,
       onSelected: (selected) => onRoleFilterChanged(value),
-      backgroundColor: Colors.grey[100],
-      selectedColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
-      checkmarkColor: Theme.of(context).primaryColor,
+      backgroundColor: theme.colorScheme.surfaceContainerHigh,
+      selectedColor: theme.colorScheme.primary,
+      checkmarkColor: theme.colorScheme.onPrimary,
       labelStyle: TextStyle(
-        color: isSelected ? Theme.of(context).primaryColor : Colors.grey[700],
+        color: isSelected ? theme.colorScheme.onPrimary : theme.colorScheme.onSurfaceVariant,
         fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
       ),
     );

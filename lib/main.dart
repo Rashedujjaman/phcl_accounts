@@ -109,7 +109,6 @@ class MyApp extends StatelessWidget {
                   '/reset-password': (context) => ResetPasswordPage(),
                   '/main-navigation': (context) => MainNavigation(),
                   '/user-management': (context) => UserManagementWrapper(),
-                  '/debug-users': (context) => UserManagementPage(),
                 },
               ),
             ),
