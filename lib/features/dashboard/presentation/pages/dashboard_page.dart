@@ -132,8 +132,9 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
           if (isRefreshing)
             const LinearProgressIndicator(minHeight: 2),
           _buildSummaryCards(data),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           _buildDisplayModeIndicator(data),
+          const SizedBox(height: 16),
           _buildRevenueTrendChart(data),
           const Divider(),
           // const SizedBox(height: 20),
@@ -157,78 +158,377 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
 
   Widget _buildSummaryCards(DashboardData data) {
     final theme = Theme.of(context);
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [theme.colorScheme.surfaceContainerHighest,theme.colorScheme.surfaceContainerLow, theme.colorScheme.surfaceContainerHighest],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          transform: GradientRotation(0.785398), // 45 degrees in radians
-        ),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Revenue: ',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  NumberFormat.currency(symbol: '৳ ').format(data.netBalance),
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: data.netBalance >= 0 ? theme.colorScheme.primary : theme.colorScheme.error,
+    return Column(
+      children: [
+        // Main Revenue Card
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: data.netBalance >= 0 
+                ? [theme.colorScheme.primary.withValues(alpha: 0.1), theme.colorScheme.tertiary.withValues(alpha: 0.05)]
+                : [theme.colorScheme.error.withValues(alpha: 0.1), theme.colorScheme.errorContainer.withValues(alpha: 0.05)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: data.netBalance >= 0 
+                ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                : theme.colorScheme.error.withValues(alpha: 0.2),
+              width: 1.5,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.shadow.withValues(alpha: 0.08),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: data.netBalance >= 0 
+                        ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                        : theme.colorScheme.error.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      data.netBalance >= 0 ? Icons.trending_up : Icons.trending_down,
+                      color: data.netBalance >= 0 ? theme.colorScheme.primary : theme.colorScheme.error,
+                      size: 28,
+                    ),
                   ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Net Revenue',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          NumberFormat.currency(symbol: '৳ ').format(data.netBalance),
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            color: data.netBalance >= 0 ? theme.colorScheme.primary : theme.colorScheme.error,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        
+        const SizedBox(height: 16),
+        
+        // Income and Expense Cards Row
+        Row(
+          children: [
+            // Income Card
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: theme.colorScheme.tertiary.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.shadow.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-              ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.tertiary.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.arrow_upward,
+                            color: theme.colorScheme.tertiary,
+                            size: 20,
+                          ),
+                        ),
+                        Icon(
+                          Icons.more_vert,
+                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Total Income',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      NumberFormat.currency(symbol: '৳ ').format(data.totalIncome),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.tertiary,
+                        // fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-            Divider(
-              thickness: 1,
-              height: 24,
-              color: theme.colorScheme.outline,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Total In (+):',
-                  style: TextStyle(fontSize: 16, color: theme.colorScheme.primary),
+            
+            const SizedBox(width: 12),
+            
+            // Expense Card
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: theme.colorScheme.error.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: theme.colorScheme.shadow.withValues(alpha: 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                Text(
-                  NumberFormat.currency(symbol: '৳ ').format(data.totalIncome),
-                  style: TextStyle(fontSize: 16, color: theme.colorScheme.primary),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.error.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.arrow_downward,
+                            color: theme.colorScheme.error,
+                            size: 20,
+                          ),
+                        ),
+                        Icon(
+                          Icons.more_vert,
+                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                          size: 16,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Total Expense',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      NumberFormat.currency(symbol: '৳ ').format(data.totalExpense),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: theme.colorScheme.error,
+                        // fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Total Out (-):',
-                  style: TextStyle(fontSize: 16, color: theme.colorScheme.error),
-                ),
-                Text(
-                  NumberFormat.currency(symbol: '৳ ').format(data.totalExpense),
-                  style: TextStyle(fontSize: 16, color: theme.colorScheme.error),
-                ),
-              ],
-            ),
-            Divider(
-              thickness: 1,
-              height: 24,
-              color: theme.colorScheme.outline,
+              ),
             ),
           ],
         ),
-      ),
+        
+        const SizedBox(height: 16),
+        
+        // Financial Health Indicator
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.2),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.shadow.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.analytics_outlined,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Financial Overview',
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      color: theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              
+              // Income vs Expense Ratio Bar
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Income vs Expense Ratio',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            Text(
+                              data.totalIncome > 0 
+                                ? '${((data.totalIncome / (data.totalIncome + data.totalExpense)) * 100).toStringAsFixed(1)}%'
+                                : '0%',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          height: 8,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(4),
+                            color: theme.colorScheme.surfaceContainerHighest,
+                          ),
+                          child: Row(
+                            children: [
+                              if (data.totalIncome > 0)
+                                Expanded(
+                                  flex: data.totalIncome.toInt(),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(4),
+                                        bottomLeft: Radius.circular(4),
+                                      ),
+                                      color: theme.colorScheme.tertiary,
+                                    ),
+                                  ),
+                                ),
+                              if (data.totalExpense > 0)
+                                Expanded(
+                                  flex: data.totalExpense.toInt(),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.only(
+                                        topRight: data.totalIncome == 0 ? const Radius.circular(4) : Radius.zero,
+                                        bottomRight: data.totalIncome == 0 ? const Radius.circular(4) : Radius.zero,
+                                        topLeft: data.totalIncome == 0 ? const Radius.circular(4) : Radius.zero,
+                                        bottomLeft: data.totalIncome == 0 ? const Radius.circular(4) : Radius.zero,
+                                      ),
+                                      color: theme.colorScheme.error,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.tertiary,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Income',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Container(
+                              width: 12,
+                              height: 12,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.error,
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Expense',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
