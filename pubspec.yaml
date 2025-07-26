@@ -60,6 +60,7 @@ dependencies:
   pdf: ^3.11.1
   share_plus: ^10.1.2
   printing: ^5.14.1
+  qr: ^3.0.1
 
 dev_dependencies:
   flutter_test:
