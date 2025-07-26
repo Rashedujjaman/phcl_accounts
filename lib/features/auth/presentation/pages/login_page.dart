@@ -1,8 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:phcl_accounts/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:shimmer/shimmer.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -73,21 +71,11 @@ class LoginPageState extends State<LoginPage> {
                             padding: const EdgeInsets.only(bottom: 24.0),
                             child: SizedBox(
                               height: 80,
-                              child: CachedNetworkImage(
-                                imageUrl:
-                                    'https://phclbd.com/wp-content/uploads/2025/03/cropped-Untitled_design__19_-removebg-preview-e1742456418321.png',
-                                placeholder: (context, url) =>
-                                    Shimmer.fromColors(
-                                      baseColor: Colors.grey[300]!,
-                                      highlightColor: Colors.grey[100]!,
-                                      child: Container(
-                                        width: 80,
-                                        height: 80,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                errorWidget: (context, url, error) =>
-                                    const Icon(Icons.error),
+                              child: Image.asset(
+                                'assets/images/logo.png',
+                                height: 80,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(Icons.business, size: 80),
                               ),
                             ),
                           ),

@@ -151,9 +151,10 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [theme.colorScheme.primaryContainer, theme.colorScheme.errorContainer],
+          colors: [theme.colorScheme.surfaceContainerHighest,theme.colorScheme.surfaceContainerLow, theme.colorScheme.surfaceContainerHighest],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
+          transform: GradientRotation(0.785398), // 45 degrees in radians
         ),
         borderRadius: BorderRadius.circular(8),
       ),
@@ -228,6 +229,7 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
       data: data.expenseCategoryDistribution,
       title: 'Expense Breakdown',
       borderColor: theme.colorScheme.error,
+      // backgroundColor: theme.colorScheme.error.withValues(alpha: 0.1),
     );
   }
 
@@ -236,7 +238,7 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
     return PieChart(
       data: data.incomeCategoryDistribution,
       title: 'Income Breakdown',
-      borderColor: theme.colorScheme.primary,
+      borderColor: theme.colorScheme.tertiary,
     );
   }
 
@@ -272,7 +274,7 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
           xValueMapper: (ChartData data, _) => data.key,
           yValueMapper: (ChartData data, _) => data.value,
           name: 'Income',
-          color: theme.colorScheme.primary,
+          color: theme.colorScheme.tertiary,
           dataLabelSettings: const DataLabelSettings(
             isVisible: true,
             labelAlignment: ChartDataLabelAlignment.auto,

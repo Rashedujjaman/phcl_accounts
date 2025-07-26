@@ -9,7 +9,6 @@ import 'package:phcl_accounts/core/theme/app_themes.dart';
 import 'package:phcl_accounts/core/theme/theme_provider.dart';
 import 'package:phcl_accounts/core/widgets/main_navigation.dart';
 import 'package:phcl_accounts/features/admin/presentation/pages/user_management_wrapper.dart';
-import 'package:phcl_accounts/features/admin/presentation/pages/user_management_page.dart';
 import 'package:phcl_accounts/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/get_current_user.dart';
 import 'package:phcl_accounts/features/auth/domain/usecases/sign_in.dart';

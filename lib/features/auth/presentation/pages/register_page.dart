@@ -1,8 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:phcl_accounts/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:shimmer/shimmer.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -129,21 +127,11 @@ class _RegisterPageState extends State<RegisterPage> {
                           // Company Logo
                           SizedBox(
                             height: 60,
-                            child: CachedNetworkImage(
-                              imageUrl:
-                                  'https://phclbd.com/wp-content/uploads/2025/03/cropped-Untitled_design__19_-removebg-preview-e1742456418321.png',
-                              placeholder: (context, url) =>
-                                  Shimmer.fromColors(
-                                    baseColor: theme.colorScheme.outline,
-                                    highlightColor: theme.colorScheme.surface,
-                                    child: Container(
-                                      width: 180,
-                                      height: 60,
-                                      color: theme.colorScheme.surface,
-                                    ),
-                                  ),
-                              errorWidget: (context, url, error) =>
-                                  const Icon(Icons.error),
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              height: 60,
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.business, size: 60),
                             ),
                           ),
                           const SizedBox(height: 16),

@@ -6,8 +6,9 @@ class PieChart extends StatelessWidget {
   final List<ChartData> data;
   final String title;
   final Color? borderColor;
+  final Color? backgroundColor;
 
-  const PieChart({super.key, required this.data, required this.title, this.borderColor});
+  const PieChart({super.key, required this.data, required this.title, this.borderColor, this.backgroundColor});
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +16,7 @@ class PieChart extends StatelessWidget {
       title: ChartTitle(text: title),
       borderColor: borderColor ?? Theme.of(context).colorScheme.outline,
       borderWidth: 1,
+      backgroundColor: backgroundColor,
       tooltipBehavior: TooltipBehavior(enable: true),
       legend: const Legend(
         isVisible: true,

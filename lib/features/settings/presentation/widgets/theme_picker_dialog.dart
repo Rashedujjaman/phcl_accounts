@@ -99,7 +99,7 @@ class _ThemeOption extends StatelessWidget {
           ),
           borderRadius: BorderRadius.circular(8),
           color: isSelected 
-              ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3)
+              ? Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3)
               : null,
         ),
         child: Row(
