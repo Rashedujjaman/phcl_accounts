@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:intl/intl.dart';
+import 'package:phcl_accounts/features/dashboard/presentation/widgets/cartesian_bar_chart.dart';
+import 'package:phcl_accounts/features/dashboard/presentation/widgets/cartesian_line_chart.dart';
 import 'package:phcl_accounts/features/dashboard/presentation/bloc/dashboard_bloc.dart';
 import 'package:phcl_accounts/core/widgets/date_range_selector.dart';
 import 'package:phcl_accounts/features/dashboard/domain/entities/dashboard_data.dart';
@@ -33,8 +35,9 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
 
   void _loadInitialData() {
     final now = DateTime.now();
-    final firstDayOfYear = DateTime(now.year, 1, 1);
-    _dateRange = DateTimeRange(start: firstDayOfYear, end: now);
+    // final firstDayOfYear = DateTime(now.year, 1, 1);
+    final firstDayOfMonth = DateTime(now.year, now.month, 1);
+    _dateRange = DateTimeRange(start: firstDayOfMonth, end: now);
     _loadDashboardData();
   }
 
@@ -129,9 +132,15 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
           if (isRefreshing)
             const LinearProgressIndicator(minHeight: 2),
           _buildSummaryCards(data),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
+          _buildDisplayModeIndicator(data),
           _buildRevenueTrendChart(data),
-          const SizedBox(height: 20),
+          const Divider(),
+          // const SizedBox(height: 20),
+          _buildIncomeTrendChart(data),
+          const Divider(),
+          _buildExpenseTrendChart(data),
+          const Divider(),
           _buildIncomeVsExpenseChart(data),
           const SizedBox(height: 20),
           _buildExpenseCategoryDistributionChart(data),
@@ -171,7 +180,7 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 Text(
-                  '৳${data.netBalance.toStringAsFixed(2)}',
+                  NumberFormat.currency(symbol: '৳ ').format(data.netBalance),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -193,7 +202,7 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                   style: TextStyle(fontSize: 16, color: theme.colorScheme.primary),
                 ),
                 Text(
-                  '৳${data.totalIncome.toStringAsFixed(2)}',
+                  NumberFormat.currency(symbol: '৳ ').format(data.totalIncome),
                   style: TextStyle(fontSize: 16, color: theme.colorScheme.primary),
                 ),
               ],
@@ -207,7 +216,7 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                   style: TextStyle(fontSize: 16, color: theme.colorScheme.error),
                 ),
                 Text(
-                  '৳${data.totalExpense.toStringAsFixed(2)}',
+                  NumberFormat.currency(symbol: '৳ ').format(data.totalExpense),
                   style: TextStyle(fontSize: 16, color: theme.colorScheme.error),
                 ),
               ],
@@ -219,6 +228,41 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildDisplayModeIndicator(DashboardData data) {
+    final theme = Theme.of(context);
+    final displayModeText = data.displayMode == ChartDisplayMode.daily ? 'Daily View' : 'Monthly View';
+    final icon = data.displayMode == ChartDisplayMode.daily ? Icons.today : Icons.calendar_view_month;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer.withValues(alpha: 0.7),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 16,
+            color: theme.colorScheme.onPrimaryContainer,
+          ),
+          const SizedBox(width: 8),
+          Text(
+            displayModeText,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onPrimaryContainer,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -242,58 +286,38 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
     );
   }
 
-  Widget _buildRevenueTrendChart(DashboardData data){
-    return SfCartesianChart(
-      title: ChartTitle(text: 'Revenue Trend'),
-      legend: const Legend(isVisible: true),
-      primaryXAxis: const CategoryAxis(
-        labelRotation: -90,
-      ),
-      tooltipBehavior: TooltipBehavior(enable: true),
-      series: <CartesianSeries<ChartData, String>>[
-        LineSeries<ChartData, String>(
-          dataSource: data.revenueTrendData,
-          xValueMapper: (ChartData sales, _) => sales.key,
-          yValueMapper: (ChartData sales, _) => sales.value,
-          name: 'Revenue',
-          dataLabelSettings: const DataLabelSettings(isVisible: true),
-          markerSettings: const MarkerSettings(isVisible: true),
-        ),
-      ],
+  Widget _buildRevenueTrendChart(DashboardData data) {
+    return CartesianLineChart(
+      data: data.revenueTrendData,
+      title: 'Revenue',
+      displayMode: data.displayMode,
+    );
+  }
+
+  Widget _buildIncomeTrendChart(DashboardData data) {
+    return CartesianLineChart(
+      data: data.incomeChartData,
+      title: 'Income',
+      displayMode: data.displayMode,
+      color: Theme.of(context).colorScheme.tertiary,
+    );
+  }
+
+  Widget _buildExpenseTrendChart(DashboardData data) {
+    return CartesianLineChart(
+      data: data.expenseChartData,
+      title: 'Expense',
+      color: Theme.of(context).colorScheme.error,
+      displayMode: data.displayMode,
     );
   }
 
   Widget _buildIncomeVsExpenseChart(DashboardData data) {
-    final theme = Theme.of(context);
-    return SfCartesianChart(
-      title: const ChartTitle(text: 'Income vs Expense'),
-      primaryXAxis: const CategoryAxis(),
-      series: <CartesianSeries<ChartData, String>>[
-        ColumnSeries<ChartData, String>(
-          dataSource: data.incomeChartData,
-          xValueMapper: (ChartData data, _) => data.key,
-          yValueMapper: (ChartData data, _) => data.value,
-          name: 'Income',
-          color: theme.colorScheme.tertiary,
-          dataLabelSettings: const DataLabelSettings(
-            isVisible: true,
-            labelAlignment: ChartDataLabelAlignment.auto,
-            angle: -45,
-          ),
-        ),
-        ColumnSeries<ChartData, String>(
-          dataSource: data.expenseChartData,
-          xValueMapper: (ChartData data, _) => data.key,
-          yValueMapper: (ChartData data, _) => data.value,
-          name: 'Expense',
-          color: theme.colorScheme.error,
-          dataLabelSettings: const DataLabelSettings(
-            isVisible: true,
-            labelAlignment: ChartDataLabelAlignment.auto,
-            angle: -45,
-          ),
-        ),
-      ],
+    return CartesianBarChart(
+      incomeData: data.incomeChartData,
+      expenseData: data.expenseChartData,
+      title: 'Income vs Expense',
+      displayMode: data.displayMode,
     );
   }
 }

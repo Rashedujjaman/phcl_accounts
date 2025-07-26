@@ -89,7 +89,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       color: Theme.of(context).colorScheme.surfaceDim,
                       borderRadius: const BorderRadius.all(Radius.circular(30)),
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.tertiary,
+                        color: Theme.of(context).colorScheme.primary,
                         width: .5,
                       ),
                     ),
