@@ -4,6 +4,9 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+import 'package:phcl_accounts/core/theme/app_themes.dart';
+import 'package:phcl_accounts/core/theme/theme_provider.dart';
 import 'package:phcl_accounts/core/widgets/main_navigation.dart';
 import 'package:phcl_accounts/features/admin/presentation/pages/user_management_wrapper.dart';
 import 'package:phcl_accounts/features/admin/presentation/pages/user_management_page.dart';
@@ -28,77 +31,90 @@ import 'package:phcl_accounts/features/transactions/presentation/bloc/transactio
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(const MyApp());
+  
+  // Initialize theme provider
+  final themeProvider = ThemeProvider();
+  await themeProvider.initialize();
+  
+  runApp(MyApp(themeProvider: themeProvider));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final ThemeProvider themeProvider;
+  
+  const MyApp({super.key, required this.themeProvider});
 
   @override
   Widget build(BuildContext context) {
-    return MultiRepositoryProvider(
-      providers: [
-        RepositoryProvider<AuthRepositoryImpl>(
-          create: (context) => AuthRepositoryImpl(
-            firebaseAuth: FirebaseAuth.instance,
-            firestore: FirebaseFirestore.instance,
-            storage: FirebaseStorage.instance
-          ),
-        ),
-        RepositoryProvider<DashboardRepository>(
-          create: (context) => DashboardRepositoryImpl(
-            auth: FirebaseAuth.instance,
-            firestore: FirebaseFirestore.instance,
-          ),
-        ),
-        RepositoryProvider<TransactionRepository>(
-          create: (context) => TransactionRepositoryImpl(
-            firestore: FirebaseFirestore.instance,
-            storage: FirebaseStorage.instance,
-            auth: FirebaseAuth.instance,
-          ),
-        ),
-      ],
-      child: MultiBlocProvider(
-        providers: [
-          BlocProvider(
-            create: (context) => AuthBloc(
-              signIn: SignIn(context.read<AuthRepositoryImpl>()),
-              signUp: SignUp(context.read<AuthRepositoryImpl>()),
-              signOut: SignOut(context.read<AuthRepositoryImpl>()),
-              getCurrentUser: GetCurrentUser(context.read<AuthRepositoryImpl>()),
-              updateUserProfile: UpdateUserProfile(context.read<AuthRepositoryImpl>()),
-            )..add(CheckAuthStatusEvent()),
-          ),
-          BlocProvider(
-            create: (context) => DashboardBloc(
-              getDashboardData: GetDashboardData(
-                context.read<DashboardRepository>(),
+    return ChangeNotifierProvider.value(
+      value: themeProvider,
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MultiRepositoryProvider(
+            providers: [
+              RepositoryProvider<AuthRepositoryImpl>(
+                create: (context) => AuthRepositoryImpl(
+                  firebaseAuth: FirebaseAuth.instance,
+                  firestore: FirebaseFirestore.instance,
+                  storage: FirebaseStorage.instance
+                ),
               ),
-            )..add(LoadDashboardData()),
-          ),
-          BlocProvider(
-            create: (context) =>
-                TransactionBloc(context.read<TransactionRepository>()),
-          ),
-        ],
-        child: MaterialApp(
-          title: 'PHCL Accounts',
-          debugShowCheckedModeBanner: false,
-          theme: ThemeData(
-            primarySwatch: Colors.blue,
-            visualDensity: VisualDensity.adaptivePlatformDensity,
-          ),
-          home: const AuthWrapper(),
-          routes: {
-            '/login': (context) => LoginPage(),
-            '/register': (context) => RegisterPage(),
-            '/reset-password': (context) => ResetPasswordPage(),
-            '/main-navigation': (context) => MainNavigation(),
-            '/user-management': (context) => UserManagementWrapper(),
-            '/debug-users': (context) => UserManagementPage(),
-          },
-        ),
+              RepositoryProvider<DashboardRepository>(
+                create: (context) => DashboardRepositoryImpl(
+                  auth: FirebaseAuth.instance,
+                  firestore: FirebaseFirestore.instance,
+                ),
+              ),
+              RepositoryProvider<TransactionRepository>(
+                create: (context) => TransactionRepositoryImpl(
+                  firestore: FirebaseFirestore.instance,
+                  storage: FirebaseStorage.instance,
+                  auth: FirebaseAuth.instance,
+                ),
+              ),
+            ],
+            child: MultiBlocProvider(
+              providers: [
+                BlocProvider(
+                  create: (context) => AuthBloc(
+                    signIn: SignIn(context.read<AuthRepositoryImpl>()),
+                    signUp: SignUp(context.read<AuthRepositoryImpl>()),
+                    signOut: SignOut(context.read<AuthRepositoryImpl>()),
+                    getCurrentUser: GetCurrentUser(context.read<AuthRepositoryImpl>()),
+                    updateUserProfile: UpdateUserProfile(context.read<AuthRepositoryImpl>()),
+                  )..add(CheckAuthStatusEvent()),
+                ),
+                BlocProvider(
+                  create: (context) => DashboardBloc(
+                    getDashboardData: GetDashboardData(
+                      context.read<DashboardRepository>(),
+                    ),
+                  )..add(LoadDashboardData()),
+                ),
+                BlocProvider(
+                  create: (context) =>
+                      TransactionBloc(context.read<TransactionRepository>()),
+                ),
+              ],
+              child: MaterialApp(
+                title: 'PHCL Accounts',
+                debugShowCheckedModeBanner: false,
+                themeMode: themeProvider.themeMode,
+                theme: AppThemes.lightTheme,
+                darkTheme: AppThemes.darkTheme,
+                home: const AuthWrapper(),
+                routes: {
+                  '/login': (context) => LoginPage(),
+                  '/register': (context) => RegisterPage(),
+                  '/reset-password': (context) => ResetPasswordPage(),
+                  '/main-navigation': (context) => MainNavigation(),
+                  '/user-management': (context) => UserManagementWrapper(),
+                  '/debug-users': (context) => UserManagementPage(),
+                },
+              ),
+            ),
+          );
+        },
       ),
     );
   }

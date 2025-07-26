@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:typed_data';
-
 import 'package:dio/dio.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -38,7 +37,7 @@ class PdfReceiptService {
             filesToShare.add(XFile(attachmentFile.path));
           }
         } catch (e) {
-          print('Failed to download attachment: $e');
+          rethrow;
         }
       }
       
@@ -50,7 +49,7 @@ class PdfReceiptService {
         subject: 'Transaction Receipt',
       );
     } catch (e) {
-      throw Exception('Failed to generate receipt: $e');
+      rethrow;
     }
   }
 
@@ -63,7 +62,7 @@ class PdfReceiptService {
         name: 'receipt_${transaction.category}_${(transaction.amount)}.pdf',
       );
     } catch (e) {
-      throw Exception('Failed to download receipt: $e');
+      rethrow;
     }
   }
 
@@ -78,7 +77,7 @@ class PdfReceiptService {
       try {
         attachmentImage = await _downloadAndPrepareImage(transaction.attachmentUrl!);
       } catch (e) {
-        print('Failed to load attachment image: $e');
+        rethrow;
       }
     }
     
@@ -90,7 +89,6 @@ class PdfReceiptService {
         build: (pw.Context context) => _buildReceiptContent(transaction, isIncome, attachmentImage),
       ),
     );
-    
     return pdf;
   }
 
@@ -554,7 +552,7 @@ class PdfReceiptService {
         return pw.MemoryImage(response);
       }
     } catch (e) {
-      print('Error downloading image: $e');
+      rethrow;
     }
     return null;
   }
@@ -573,7 +571,7 @@ class PdfReceiptService {
         return file;
       }
     } catch (e) {
-      print('Error downloading attachment file: $e');
+      rethrow;
     }
     return null;
   }
@@ -588,8 +586,7 @@ class PdfReceiptService {
       );
       return Uint8List.fromList(response.data!);
     } catch (e) {
-      print('Error downloading file: $e');
-      return null;
+      throw Exception('Error downloading file: $e');
     }
   }
 }

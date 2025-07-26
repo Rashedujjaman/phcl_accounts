@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
+import 'package:phcl_accounts/core/theme/theme_provider.dart';
 import 'package:phcl_accounts/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:phcl_accounts/features/settings/presentation/widgets/edit_profile_bottomsheet.dart';
+import 'package:phcl_accounts/features/settings/presentation/widgets/theme_picker_dialog.dart';
 import 'package:shimmer/shimmer.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -231,17 +234,49 @@ class _SettingsPageState extends State<SettingsPage> {
         //     // Navigator.pushNamed(context, '/notifications');
         //   },
         // ),
-        ListTile(
-          leading: const Icon(Icons.dark_mode),
-          trailing: Switch(
-            value: Theme.of(context).brightness == Brightness.dark,
-            onChanged: (bool value) {
-              // Provider.of<ThemeProvider>(context, listen: false)
-              //     .toggleTheme();
-              // Handle toggle logic here
-            },
-          ),
-          title: const Text('Dark Mode'),
+        Consumer<ThemeProvider>(
+          builder: (context, themeProvider, child) {
+            return Column(
+              children: [
+                ListTile(
+                  leading: Icon(
+                    themeProvider.isDarkMode(context) 
+                        ? Icons.dark_mode 
+                        : Icons.light_mode,
+                  ),
+                  title: Text('Theme: ${themeProvider.getThemeStatusText(context)}'),
+                  trailing: Switch(
+                    value: themeProvider.isDarkMode(context),
+                    onChanged: (bool value) {
+                      themeProvider.toggleTheme(context);
+                    },
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.palette),
+                  title: const Text('Advanced Theme Options'),
+                  trailing: const Icon(Icons.arrow_forward),
+                  onTap: () => showThemePicker(context),
+                ),
+                // Show reset to system option when not using system theme
+                // if (themeProvider.themeMode != ThemeMode.system)
+                //   ListTile(
+                //     leading: const Icon(Icons.settings_backup_restore),
+                //     title: const Text('Reset to System Theme'),
+                //     trailing: const Icon(Icons.arrow_forward),
+                //     onTap: () {
+                //       themeProvider.resetToSystemTheme();
+                //       ScaffoldMessenger.of(context).showSnackBar(
+                //         const SnackBar(
+                //           content: Text('Theme reset to system default'),
+                //           duration: Duration(seconds: 2),
+                //         ),
+                //       );
+                //     },
+                //   ),
+              ],
+            );
+          },
         ),
         ListTile(
           iconColor: Colors.red,

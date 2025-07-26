@@ -61,6 +61,7 @@ dependencies:
   share_plus: ^10.1.2
   printing: ^5.14.1
   qr: ^3.0.1
+  shared_preferences: ^2.3.5
 
 dev_dependencies:
   flutter_test:
