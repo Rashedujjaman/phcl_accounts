@@ -70,14 +70,17 @@ class _DateRangeSelectorState extends State<DateRangeSelector> {
     setState(() => _selectedPreset = label);
     
     DateTimeRange newRange;
+
+    
     
     switch (label) {
       case 'Today':
-        newRange = DateTimeRange(start: now, end: now);
+        newRange = DateTimeRange(start: DateTime(now.year, now.month, now.day), end: now);
         break;
       case 'This Week':
+        final startOfWeek = now.subtract(Duration(days: now.weekday));
         newRange = DateTimeRange(
-          start: now.subtract(Duration(days: now.weekday - 1)),
+          start: DateTime(startOfWeek.year, startOfWeek.month, startOfWeek.day),
           end: now,
         );
         break;
@@ -155,10 +158,10 @@ class _DateRangeSelectorState extends State<DateRangeSelector> {
   }
 
   static const _defaultPresets = [
-    // 'Today',
+    'Today',
     'This Week',
     'This Month',
-    // 'Last 3 Months',
+    'Last 3 Months',
     'Last 6 Months',
     'This Year',
   ];
@@ -241,7 +244,7 @@ class _CustomRangeSelector extends StatelessWidget {
           TextButton(
             onPressed: onStartDatePressed,
             child: Text(
-              DateFormat('MMM d, y').format(range.start),
+              DateFormat('EEE, MMM d, y').format(range.start),
               style: const TextStyle(fontSize: 12),
             ),
           ),
@@ -249,7 +252,7 @@ class _CustomRangeSelector extends StatelessWidget {
           TextButton(
             onPressed: onEndDatePressed,
             child: Text(
-              DateFormat('MMM d, y').format(range.end),
+              DateFormat('EEE, MMM d, y').format(range.end),
               style: const TextStyle(fontSize: 12),
             ),
           ),

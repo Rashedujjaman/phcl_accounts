@@ -12,7 +12,7 @@ class AppThemes {
       primary: Color(0xFF2196F3), // Blue
       onPrimary: Color(0xFFFFFFFF),
       secondary: Color(0xFF03DAC6), // Teal
-      onSecondary: Color(0xFF000000),
+      onSecondary: Color(0xFFFAFAFA),
       tertiary: Color(0xFF43A047), // Green (for income)
       onTertiary: Color(0xFFFFFFFF),
       error: Color(0xFFFF5722), // Deep Orange
@@ -204,9 +204,9 @@ class AppThemes {
     const ColorScheme darkColorScheme = ColorScheme(
       brightness: Brightness.dark,
       primary: Color(0xFF90CAF9), // Light Blue
-      onPrimary: Color(0xFF0D47A1),
+      onPrimary: Color(0xFF000000),
       secondary: Color(0xFF4DB6AC), // Light Teal
-      onSecondary: Color(0xFF00251A),
+      onSecondary: Color(0xFF121212),
       tertiary: Color(0xFF66BB6A), // Green (for income)
       onTertiary: Color(0xFF003916),
       error: Color(0xFFFF8A65), // Light Deep Orange

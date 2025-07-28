@@ -7,6 +7,8 @@ import 'package:phcl_accounts/features/dashboard/presentation/bloc/dashboard_blo
 import 'package:phcl_accounts/core/widgets/date_range_selector.dart';
 import 'package:phcl_accounts/features/dashboard/domain/entities/dashboard_data.dart';
 import 'package:phcl_accounts/features/dashboard/presentation/widgets/pie_chart.dart';
+import 'package:phcl_accounts/features/dashboard/presentation/widgets/dashboard_skeleton.dart';
+import 'package:phcl_accounts/core/widgets/skeleton_widgets.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -15,22 +17,105 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveClientMixin {
+class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
   DateTimeRange? _dateRange;
+  late AnimationController _animationController;
+  late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
     _loadInitialData();
   }
 
   @override
   void dispose() {
+    _animationController.dispose();
     super.dispose();
   }
 
   @override
   bool get wantKeepAlive => true;
+
+  /// Determines appropriate text style based on amount size
+  TextStyle _getAmountTextStyle(BuildContext context, double amount, {bool isMainCard = false}) {
+    final theme = Theme.of(context);
+    final absoluteAmount = amount.abs();
+    
+    if (isMainCard) {
+      // For the main net revenue card
+      if (absoluteAmount >= 100000000) { // 10 crore+
+        return theme.textTheme.headlineSmall?.copyWith(
+          fontWeight: FontWeight.bold,
+          fontSize: 20,
+        ) ?? const TextStyle();
+      } else if (absoluteAmount >= 10000000) { // 1 crore+
+        return theme.textTheme.headlineSmall?.copyWith(
+          fontWeight: FontWeight.bold,
+          fontSize: 24,
+        ) ?? const TextStyle();
+      } else if (absoluteAmount >= 1000000) { // 10 lakh+
+        return theme.textTheme.headlineMedium?.copyWith(
+          fontWeight: FontWeight.bold,
+        ) ?? const TextStyle();
+      } else {
+        return theme.textTheme.headlineLarge?.copyWith(
+          fontWeight: FontWeight.bold,
+        ) ?? const TextStyle();
+      }
+    } else {
+      // For income/expense cards
+      if (absoluteAmount >= 100000000) { // 10 crore+
+        return theme.textTheme.bodyMedium?.copyWith(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ) ?? const TextStyle();
+      } else if (absoluteAmount >= 10000000) { // 1 crore+
+        return theme.textTheme.titleSmall?.copyWith(
+          fontSize: 14,
+        ) ?? const TextStyle();
+      } else if (absoluteAmount >= 1000000) { // 10 lakh+
+        return theme.textTheme.titleMedium?.copyWith() ?? const TextStyle();
+      } else {
+        return theme.textTheme.titleLarge?.copyWith() ?? const TextStyle();
+      }
+    }
+  }
+
+  /// Creates an animated number widget with proper formatting
+  Widget _buildAnimatedAmount(double amount, {
+    required Color color,
+    bool isMainCard = false,
+  }) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        final animatedValue = Tween<double>(
+          begin: 0,
+          end: amount,
+        ).animate(_animation).value;
+        
+        return FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerLeft,
+          child: Text(
+            NumberFormat.currency(symbol: '৳ ').format(animatedValue),
+            style: _getAmountTextStyle(context, amount, isMainCard: isMainCard).copyWith(color: color),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+          ),
+        );
+      },
+    );
+  }
 
 
   void _loadInitialData() {
@@ -50,6 +135,10 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
         endDate: _dateRange!.end,
       ),
     );
+    
+    // Reset and start animation
+    _animationController.reset();
+    _animationController.forward();
   }
 
   void _refreshDashboardData() {
@@ -61,6 +150,10 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
         endDate: _dateRange!.end,
       ),
     );
+    
+    // Reset and start animation
+    _animationController.reset();
+    _animationController.forward();
   }
 
   @override
@@ -78,7 +171,10 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  _buildDateRangeSelector(),
+                  // Show skeleton for date range selector only during initial loading
+                  (state is DashboardInitial) 
+                    ? const SkeletonDateRangeSelector()
+                    : _buildDateRangeSelector(),
                   const SizedBox(height: 20),
                   _buildDashboardContent(state),
                 ],
@@ -99,12 +195,38 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
           _loadDashboardData();
         }
       },
+      presetLabels: const [
+        'Today',
+        'This Week',
+        'This Month',
+        'Last 3 Months',
+        'Last 6 Months',
+        'This Year',
+      ],
     );
   }
 
   Widget _buildDashboardContent(DashboardState state) {
     if (state is DashboardInitial || state is DashboardLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Column(
+        children: [
+          const SkeletonDashboardSummary(),
+          const SizedBox(height: 24),
+          const SkeletonDisplayModeIndicator(),
+          const SizedBox(height: 16),
+          SkeletonChart(title: 'Revenue'),
+          const Divider(),
+          SkeletonChart(title: 'Income'),
+          const Divider(),
+          SkeletonChart(title: 'Expense'),
+          const Divider(),
+          SkeletonChart(title: 'Income vs Expense'),
+          const SizedBox(height: 20),
+          SkeletonPieChart(title: 'Expense Breakdown'),
+          const SizedBox(height: 20),
+          SkeletonPieChart(title: 'Income Breakdown'),
+        ],
+      );
     }
 
     if (state is DashboardError) {
@@ -127,10 +249,28 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
       final data = (state as DashboardLoaded).dashboardData;
       final isRefreshing = state is DashboardRefreshing;
 
+      // Start animation when data is loaded for the first time
+      if (!isRefreshing && _animationController.status == AnimationStatus.dismissed) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _animationController.forward();
+          }
+        });
+      }
+
       return Column(
         children: [
           if (isRefreshing)
-            const LinearProgressIndicator(minHeight: 2),
+            Container(
+              height: 2,
+              width: double.infinity,
+              margin: const EdgeInsets.only(bottom: 16),
+              child: SkeletonWidget(
+                width: double.infinity,
+                height: 2,
+                borderRadius: BorderRadius.circular(1),
+              ),
+            ),
           _buildSummaryCards(data),
           const SizedBox(height: 24),
           _buildDisplayModeIndicator(data),
@@ -219,12 +359,10 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                           ),
                         ),
                         const SizedBox(height: 4),
-                        Text(
-                          NumberFormat.currency(symbol: '৳ ').format(data.netBalance),
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            color: data.netBalance >= 0 ? theme.colorScheme.primary : theme.colorScheme.error,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        _buildAnimatedAmount(
+                          data.netBalance,
+                          color: data.netBalance >= 0 ? theme.colorScheme.primary : theme.colorScheme.error,
+                          isMainCard: true,
                         ),
                       ],
                     ),
@@ -293,12 +431,10 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      NumberFormat.currency(symbol: '৳ ').format(data.totalIncome),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.tertiary,
-                        // fontWeight: FontWeight.bold,
-                      ),
+                    _buildAnimatedAmount(
+                      data.totalIncome,
+                      color: theme.colorScheme.tertiary,
+                      isMainCard: false,
                     ),
                   ],
                 ),
@@ -360,12 +496,10 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      NumberFormat.currency(symbol: '৳ ').format(data.totalExpense),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: theme.colorScheme.error,
-                        // fontWeight: FontWeight.bold,
-                      ),
+                    _buildAnimatedAmount(
+                      data.totalExpense,
+                      color: theme.colorScheme.error,
+                      isMainCard: false,
                     ),
                   ],
                 ),
