@@ -23,36 +23,30 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<User?> signIn(String email, String password) async {
     try {
-      final result = await _firebaseAuth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      
-      final user = result.user;
-      if (user != null) {
-        // Check if user is active in Firestore
-        final userDoc = await _firestore
+        final user = await _firestore
             .collection('users')
-            .doc(user.uid)
+            .where('email', isEqualTo: email)
+            .limit(1)
             .get();
-        
-        if (!userDoc.exists) {
-          // User document doesn't exist in Firestore
-          await _firebaseAuth.signOut(); // Sign out the user
+
+        if (user.docs.isEmpty) {
           throw const FirebaseAuthFailure('User account not found.');
         }
-        
-        final userData = userDoc.data()!;
+
+        final userData = user.docs.first.data();
         final isActive = userData['isActive'] as bool? ?? false;
         
         if (!isActive) {
           // User is deactivated
-          await _firebaseAuth.signOut(); // Sign out the user
           throw const FirebaseAuthFailure('Your account has been deactivated. Please contact an administrator for details.');
         }
-      }
-      
-      return user;
+
+      final result = await _firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      return result.user;
     } on FirebaseAuthException catch (e) {
       throw FirebaseAuthFailure.fromCode(e.code);
     } catch (e) {
