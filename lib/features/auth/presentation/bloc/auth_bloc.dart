@@ -101,6 +101,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         event.password,
       );
       emit(AuthSignUpSuccess());
+      
+      // Admin session should be preserved, so return to the current authenticated state
       emit(currentState);
     } catch (e) {
       emit(AuthSignUpError(_extractErrorMessage(e)));

@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:phcl_accounts/features/auth/domain/repositories/auth_repository.dart';
@@ -26,10 +27,39 @@ class AuthRepositoryImpl implements AuthRepository {
         email: email,
         password: password,
       );
-      return result.user;
+      
+      final user = result.user;
+      if (user != null) {
+        // Check if user is active in Firestore
+        final userDoc = await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .get();
+        
+        if (!userDoc.exists) {
+          // User document doesn't exist in Firestore
+          await _firebaseAuth.signOut(); // Sign out the user
+          throw const FirebaseAuthFailure('User account not found.');
+        }
+        
+        final userData = userDoc.data()!;
+        final isActive = userData['isActive'] as bool? ?? false;
+        
+        if (!isActive) {
+          // User is deactivated
+          await _firebaseAuth.signOut(); // Sign out the user
+          throw const FirebaseAuthFailure('Your account has been deactivated. Please contact an administrator for details.');
+        }
+      }
+      
+      return user;
     } on FirebaseAuthException catch (e) {
       throw FirebaseAuthFailure.fromCode(e.code);
-    } catch (_) {
+    } catch (e) {
+      // Check if it's already a FirebaseAuthFailure to preserve our custom messages
+      if (e is FirebaseAuthFailure) {
+        rethrow;
+      }
       throw const FirebaseAuthFailure();
     }
   }
@@ -55,23 +85,66 @@ class AuthRepositoryImpl implements AuthRepository {
     String password,
   ) async {
     try {
-      UserCredential userCredential = await _firebaseAuth
-          .createUserWithEmailAndPassword(email: email, password: password);
+      // Store the current admin user info
+      final currentUser = _firebaseAuth.currentUser;
+      final currentUserId = currentUser?.uid;
+      
+      // Create a secondary Firebase app for user creation
+      FirebaseApp? secondaryApp;
+      FirebaseAuth? secondaryAuth;
+      
+      try {
+        // Try to get existing secondary app or create new one
+        try {
+          secondaryApp = Firebase.app('UserCreationApp');
+        } catch (e) {
+          // App doesn't exist, create it
+          secondaryApp = await Firebase.initializeApp(
+            name: 'UserCreationApp',
+            options: Firebase.app().options,
+          );
+        }
+        
+        secondaryAuth = FirebaseAuth.instanceFor(app: secondaryApp);
+        
+        // Create the new user using secondary auth (won't affect current session)
+        UserCredential userCredential = await secondaryAuth
+            .createUserWithEmailAndPassword(email: email, password: password);
 
-      UserEntity user = UserEntity(
-        firstName: firstName,
-        lastName: lastName,
-        contactNo: contactNo,
-        role: role,
-        email: email,
-        imageUrl: '',
-        isActive: true,
-        createdBy: userCredential.user!.uid,
-        createdAt: DateTime.now(),
-        uid: _firebaseAuth.currentUser?.uid,
-      );
+        final newUserId = userCredential.user!.uid;
+        
+        // Create user document in Firestore
+        UserEntity user = UserEntity(
+          firstName: firstName,
+          lastName: lastName,
+          contactNo: contactNo,
+          role: role,
+          email: email,
+          imageUrl: '',
+          isActive: true,
+          createdBy: currentUserId ?? newUserId,
+          createdAt: DateTime.now(),
+          uid: newUserId,
+        );
 
-      await _firestore.collection('users').doc(user.uid).set(user.toMap());
+        await _firestore.collection('users').doc(user.uid).set(user.toMap());
+        
+        // Sign out from secondary auth
+        await secondaryAuth.signOut();
+        
+        // Current admin session remains intact!
+        
+      } finally {
+        // Clean up secondary app
+        if (secondaryApp != null) {
+          try {
+            await secondaryApp.delete();
+          } catch (e) {
+            // Ignore cleanup errors
+          }
+        }
+      }
+      
     } on FirebaseAuthException catch (e) {
       throw FirebaseAuthFailure.fromCode(e.code);
     } catch (_) {
@@ -97,13 +170,27 @@ class AuthRepositoryImpl implements AuthRepository {
           .doc(user.uid)
           .get();
       if (!doc.exists) {
-        throw const FirebaseAuthFailure();
+        throw const FirebaseAuthFailure('User account not found.');
       }
 
-      return UserEntity.fromMap(doc.id, doc.data() as Map<String, dynamic>);
+      final userData = doc.data() as Map<String, dynamic>;
+      final userEntity = UserEntity.fromMap(doc.id, userData);
+      
+      // Check if user is still active
+      if (userEntity.isActive != true) {
+        // User has been deactivated, sign them out
+        await _firebaseAuth.signOut();
+        throw const FirebaseAuthFailure('Your account has been deactivated. Please contact an administrator.');
+      }
+      
+      return userEntity;
     } on FirebaseAuthException catch (e) {
       throw FirebaseAuthFailure.fromCode(e.code);
     } catch (e) {
+      // Check if it's already a FirebaseAuthFailure to preserve our custom messages
+      if (e is FirebaseAuthFailure) {
+        rethrow;
+      }
       throw FirebaseAuthFailure.fromCode(e.toString());
     }
   }

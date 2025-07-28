@@ -136,8 +136,6 @@ class _RegisterPageState extends State<RegisterPage> {
                           ),
                           const SizedBox(height: 16),
 
-
-
                           // First Name
                           TextFormField(
                             controller: _firstNameController,
