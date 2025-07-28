@@ -118,7 +118,9 @@ class _AttachmentViewerState extends State<AttachmentViewer> {
                     width: 100,
                     imageUrl: widget.url,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                    placeholder: (context, url) => const Center(child: CircularProgressIndicator(
+                      padding: EdgeInsets.all(16),
+                    )),
                     errorWidget: (context, url, error) => const Icon(Icons.error),
                   ),
                   ),

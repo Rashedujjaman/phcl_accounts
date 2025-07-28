@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:phcl_accounts/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:phcl_accounts/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:phcl_accounts/features/transactions/presentation/bloc/transaction_bloc.dart';
 import 'package:phcl_accounts/core/widgets/date_range_selector.dart';
@@ -140,7 +141,16 @@ class _TransactionsPageState extends State<TransactionsPage> {
           ],
         ),
       ),
-      floatingActionButton: _buildFloatingActionButtons(),
+
+      floatingActionButton: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          // Only show floating action buttons for authenticated users who are not guests
+          if (state is AuthAuthenticated && (state.user.role == 'admin' || state.user.role == 'user')) {
+            return _buildFloatingActionButtons();
+          }
+          return const SizedBox.shrink();
+        },
+      ),
     );
   }
 

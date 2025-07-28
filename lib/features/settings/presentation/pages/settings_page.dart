@@ -143,8 +143,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 : null,
           ),
           Shimmer.fromColors(
-            baseColor: Theme.of(context).colorScheme.tertiary.withValues(alpha: 1),
-            highlightColor: Theme.of(context).colorScheme.error,
+            baseColor: Theme.of(context).colorScheme.primary,
+            highlightColor: Theme.of(context).colorScheme.tertiary,
             child: Text(
               user.lastName ?? 'Unknown User',
               style: const TextStyle(
@@ -173,7 +173,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Text(
                 user.role!.toUpperCase(),
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onError,
+                  color: Theme.of(context).colorScheme.surfaceBright,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
@@ -197,7 +197,7 @@ class _SettingsPageState extends State<SettingsPage> {
       case 'user':
         return Theme.of(context).colorScheme.primary;
       default:
-        return Theme.of(context).colorScheme.outline;
+        return Theme.of(context).colorScheme.tertiary;
     }
   }
 
