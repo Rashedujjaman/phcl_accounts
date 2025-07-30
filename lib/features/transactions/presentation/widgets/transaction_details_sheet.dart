@@ -117,7 +117,7 @@ class TransactionDetailsSheet extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 8),
                         Text(
                           NumberFormat.currency(symbol: '৳ ').format(transaction.amount),
                           style: TextStyle(
@@ -130,7 +130,7 @@ class TransactionDetailsSheet extends StatelessWidget {
                     ),
                   ),
                   
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
                   
                   // Transaction Details
                   _buildDetailRow(context, 'Date', DateFormat('MMM dd, yyyy - hh:mm a').format(transaction.date)),
@@ -309,8 +309,8 @@ class TransactionDetailsSheet extends StatelessWidget {
   Widget _buildDetailRow(BuildContext context, String label, String value, {Color? color}) {
     final theme = Theme.of(context);
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(12),

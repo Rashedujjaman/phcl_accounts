@@ -57,6 +57,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
             child: Column(
               children: [
                 _buildDatePicker(),
+                const SizedBox(height: 16),
                 _buildCategoryDropdown(),
                 const SizedBox(height: 16),
                 _buildAmountField(),
@@ -90,32 +91,68 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
         }
         if (state is CategoryLoaded) {
           final categories = state.categories;
-          return DropdownButtonFormField<String>(
-            value: _selectedCategory,
-            decoration: const InputDecoration(
+          return TextFormField(
+            readOnly: true,
+            decoration: InputDecoration(
               labelText: 'Category',
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(
+              hintText: 'Select a category',
+              border: const OutlineInputBorder(),
+              suffixIcon: const Icon(Icons.arrow_drop_down),
+              contentPadding: const EdgeInsets.symmetric(
                 horizontal: 12,
                 vertical: 16,
               ),
             ),
-            items: <DropdownMenuItem<String>>[
-              for (var category in categories)
-                DropdownMenuItem(
-                  value: category,
-                  child: Text(category, style: const TextStyle(fontSize: 14)),
+            controller: TextEditingController(
+              text: _selectedCategory ?? '',
+            ),
+            validator: (value) =>
+                (value == null || value.isEmpty) ? 'Please select a category' : null,
+            onTap: () async {
+              final RenderBox renderBox = context.findRenderObject() as RenderBox;
+              final position = renderBox.localToGlobal(Offset.zero);
+              final size = renderBox.size;
+              
+              final selectedValue = await showMenu<String>(
+                context: context,
+                position: RelativeRect.fromLTRB(
+                  position.dx,
+                  position.dy + size.height,
+                  position.dx + size.width,
+                  position.dy + size.height + 300,
                 ),
-            ],
-            onChanged: (value) {
-              if (mounted) {
-                setState(() => _selectedCategory = value);
+                constraints: BoxConstraints(
+                  minWidth: size.width,
+                  maxWidth: size.width,
+                  maxHeight: 300,
+                ),
+                items: [
+                  for (var category in categories)
+                    PopupMenuItem<String>(
+                      value: category,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        child: Text(
+                          category,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
+                    ),
+                ],
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              );
+              
+              if (selectedValue != null && mounted) {
+                setState(() => _selectedCategory = selectedValue);
               }
             },
-            validator: (value) =>
-                value == null ? 'Please select a category' : null,
-            isExpanded: true,
-            menuMaxHeight: 350,
           );
         }
         return const Text('Failed to load categories');
@@ -141,21 +178,31 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   }
 
   Widget _buildDatePicker() {
-    return ListTile(
-      title: const Text('Date'),
-      subtitle: Text(DateFormat('MMM dd, yyyy').format(_selectedDate)),
-      trailing: const Icon(Icons.calendar_today),
-      onTap: () async {
-        final picked = await showDatePicker(
-          context: context,
-          initialDate: _selectedDate,
-          firstDate: DateTime(2000),
-          lastDate: DateTime.now(),
-        );
-        if (picked != null && mounted) {
-          setState(() => _selectedDate = picked);
-        }
-      },
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline,
+          width: 1,
+        ),
+      ),
+      child: ListTile(
+        title: const Text('Date'),
+        subtitle: Text(DateFormat('MMM dd, yyyy').format(_selectedDate)),
+        trailing: const Icon(Icons.calendar_today),
+        onTap: () async {
+          final picked = await showDatePicker(
+            context: context,
+            initialDate: _selectedDate,
+            firstDate: DateTime(2000),
+            lastDate: DateTime.now(),
+          );
+          if (picked != null && mounted) {
+            setState(() => _selectedDate = picked);
+          }
+        },
+      ),
     );
   }
 

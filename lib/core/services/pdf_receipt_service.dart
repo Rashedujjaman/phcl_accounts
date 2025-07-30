@@ -157,9 +157,8 @@ class PdfReceiptService {
         children: [
           // Transaction Type and Amount
           _buildTransactionHeader(transaction, isIncome),
-          pw.SizedBox(height: 20),
+          pw.SizedBox(height: 16),
           pw.Divider(color: PdfColors.grey300),
-          pw.SizedBox(height: 20),
           
           // Transaction Details
           ..._buildTransactionDetails(transaction),
@@ -378,18 +377,21 @@ class PdfReceiptService {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text(
-                  'Attached Image:',
-                  style: pw.TextStyle(
-                    fontSize: 10,
-                    color: PdfColors.grey600,
-                  ),
-                ),
-                pw.SizedBox(height: 8),
+                // pw.Text(
+                //   'Attached Image:',
+                //   style: pw.TextStyle(
+                //     fontSize: 10,
+                //     color: PdfColors.grey600,
+                //   ),
+                // ),
+                // pw.SizedBox(height: 8),
                 pw.Center(
                   child: pw.Container(
-                    height: 225,
-                    width: 300,
+
+                    constraints: const pw.BoxConstraints(
+                      maxWidth: 250,
+                      maxHeight: 200,
+                    ),
                     decoration: pw.BoxDecoration(
                       border: pw.Border.all(color: PdfColors.grey300),
                       borderRadius: pw.BorderRadius.circular(4),
