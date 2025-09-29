@@ -104,12 +104,12 @@ class _AttachmentViewerState extends State<AttachmentViewer> {
         GestureDetector(
           onTap: _showFullScreen,
           child:  _isPdf
-                ? const Column(
+                ? Column(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [
-                      Icon(Icons.picture_as_pdf, size: 48, color: Colors.red),
-                      SizedBox(height: 8),
-                      Text('PDF Document'),
+                      Icon(Icons.picture_as_pdf, size: 48, color: Theme.of(context).colorScheme.error),
+                      const SizedBox(height: 8),
+                      const Text('PDF Document'),
                     ],
                   )
                 : ClipRRect(
@@ -118,7 +118,9 @@ class _AttachmentViewerState extends State<AttachmentViewer> {
                     width: 100,
                     imageUrl: widget.url,
                     fit: BoxFit.cover,
-                    placeholder: (context, url) => const Center(child: CircularProgressIndicator()),
+                    placeholder: (context, url) => const Center(child: CircularProgressIndicator(
+                      padding: EdgeInsets.all(16),
+                    )),
                     errorWidget: (context, url, error) => const Icon(Icons.error),
                   ),
                   ),

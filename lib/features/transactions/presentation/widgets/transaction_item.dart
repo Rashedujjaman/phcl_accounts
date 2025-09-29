@@ -14,13 +14,15 @@ class TransactionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final isIncome = transaction.type == 'income';
-    final color = isIncome ? Colors.green : Colors.red;
+    final color = isIncome ? theme.colorScheme.tertiary : theme.colorScheme.error;
     final icon = isIncome ? Icons.arrow_downward : Icons.arrow_upward;
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      margin: const EdgeInsets.all(0),
       child: ListTile(
+        tileColor: theme.colorScheme.surfaceContainer,
         leading: CircleAvatar(
           backgroundColor: color.withValues(alpha: 0.2),
           child: Icon(icon, color: color),

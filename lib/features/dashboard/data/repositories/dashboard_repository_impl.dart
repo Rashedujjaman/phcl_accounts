@@ -41,6 +41,9 @@ class DashboardRepositoryImpl implements DashboardRepository {
 
       final transactions = snapshot.docs.map((doc) => TransactionEntity.fromDocumentSnapshot(doc)).toList();
 
+      // Determine display mode based on date range
+      final displayMode = _determineDisplayMode(startDate, endDate);
+
       // Calculate totals
       final totalIncome = transactions
           .where((t) => t.type == 'income')
@@ -50,13 +53,15 @@ class DashboardRepositoryImpl implements DashboardRepository {
           .where((t) => t.type == 'expense')
           .fold<double>(0, (s, t) => s + (t.amount));
 
-      // Prepare chart data
+      // Prepare chart data based on display mode
       final incomeChartData = _prepareTimeSeriesData(
         transactions.where((t) => t.type == 'income').toList(),
+        displayMode,
       );
 
       final expenseChartData = _prepareTimeSeriesData(
         transactions.where((t) => t.type == 'expense').toList(),
+        displayMode,
       );
 
       final expenseCategoryDistribution = _prepareCategoryData(
@@ -67,7 +72,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         transactions.where((t) => t.type == 'income').toList(),
       );
 
-      final revenueTrendData = _prepareRevenueTrendData(transactions);
+      final revenueTrendData = _prepareRevenueTrendData(transactions, displayMode);
 
       return DashboardData(
         totalIncome: totalIncome,
@@ -78,6 +83,7 @@ class DashboardRepositoryImpl implements DashboardRepository {
         incomeCategoryDistribution: incomeCategoryDistribution,
         expenseCategoryDistribution: expenseCategoryDistribution,
         revenueTrendData: revenueTrendData,
+        displayMode: displayMode,
       );
     } on FirebaseException catch (e) {
       throw FirebaseFailure.fromCode(e.code);
@@ -86,22 +92,83 @@ class DashboardRepositoryImpl implements DashboardRepository {
     }
   }
 
-  List<ChartData> _prepareTimeSeriesData(List<TransactionEntity> transactions) {
-    final Map<String, double> dailyTotals = {};
+  /// Determines the appropriate display mode based on the date range
+  ChartDisplayMode _determineDisplayMode(DateTime? startDate, DateTime? endDate) {
+    if (startDate == null || endDate == null) {
+      return ChartDisplayMode.monthly;
+    }
+    
+    final daysDifference = endDate.difference(startDate).inDays;
+    
+    // Use daily view for ranges <= 45 days, monthly for longer ranges
+    return daysDifference <= 45 ? ChartDisplayMode.daily : ChartDisplayMode.monthly;
+  }
+
+  List<ChartData> _prepareTimeSeriesData(
+    List<TransactionEntity> transactions, 
+    ChartDisplayMode displayMode,
+  ) {
+    final Map<String, double> groupedTotals = {};
 
     for (final t in transactions) {
-      final key = DateFormat('MMM yy').format(t.date);
-      dailyTotals.update(
+      String key;
+      if (displayMode == ChartDisplayMode.daily) {
+        // Include year if the range spans multiple years
+        final now = DateTime.now();
+        if (t.date.year != now.year) {
+          key = DateFormat('MMM dd, yy').format(t.date);
+        } else {
+          key = DateFormat('MMM dd').format(t.date);
+        }
+      } else {
+        key = DateFormat('MMM yy').format(t.date);
+      }
+      
+      groupedTotals.update(
         key,
         (value) => value + (t.amount),
         ifAbsent: () => t.amount,
       );
     }
 
-    return dailyTotals.entries
+    final sortedData = groupedTotals.entries
         .map((e) => ChartData(e.key, e.value))
-        .toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+        .toList();
+
+    // Sort based on display mode
+    if (displayMode == ChartDisplayMode.daily) {
+      sortedData.sort((a, b) {
+        try {
+          // Try both formats for daily view
+          DateTime dateA, dateB;
+          try {
+            dateA = DateFormat('MMM dd, yy').parse(a.key);
+          } catch (e) {
+            dateA = DateFormat('MMM dd').parse(a.key);
+          }
+          try {
+            dateB = DateFormat('MMM dd, yy').parse(b.key);
+          } catch (e) {
+            dateB = DateFormat('MMM dd').parse(b.key);
+          }
+          return dateA.compareTo(dateB);
+        } catch (e) {
+          return a.key.compareTo(b.key);
+        }
+      });
+    } else {
+      sortedData.sort((a, b) {
+        try {
+          final dateA = DateFormat('MMM yy').parse(a.key);
+          final dateB = DateFormat('MMM yy').parse(b.key);
+          return dateA.compareTo(dateB);
+        } catch (e) {
+          return a.key.compareTo(b.key);
+        }
+      });
+    }
+
+    return sortedData;
   }
 
   List<ChartData> _prepareCategoryData(List<TransactionEntity> transactions) {
@@ -122,12 +189,27 @@ class DashboardRepositoryImpl implements DashboardRepository {
       ..sort((a, b) => b.value.compareTo(a.value));
   }
 
-  List<ChartData> _prepareRevenueTrendData(List<TransactionEntity> transactions) {
-    final Map<String, double> monthlyMap = {};
+  List<ChartData> _prepareRevenueTrendData(
+    List<TransactionEntity> transactions,
+    ChartDisplayMode displayMode,
+  ) {
+    final Map<String, double> groupedMap = {};
 
     for (var transaction in transactions) {
-      final key = DateFormat('MMM yy').format(transaction.date);
-      monthlyMap.update(
+      String key;
+      if (displayMode == ChartDisplayMode.daily) {
+        // Include year if the range spans multiple years
+        final now = DateTime.now();
+        if (transaction.date.year != now.year) {
+          key = DateFormat('MMM dd, yy').format(transaction.date);
+        } else {
+          key = DateFormat('MMM dd').format(transaction.date);
+        }
+      } else {
+        key = DateFormat('MMM yy').format(transaction.date);
+      }
+      
+      groupedMap.update(
         key,
         (val) => transaction.type == 'income'
             ? val + transaction.amount
@@ -139,12 +221,42 @@ class DashboardRepositoryImpl implements DashboardRepository {
     }
 
     // Convert to list and sort by date
-    var sortedData = monthlyMap.entries
+    var sortedData = groupedMap.entries
         .map((e) => ChartData(e.key, e.value))
-        .toList()
-      ..sort((a, b) => DateFormat('MMM yy')
-          .parse(a.key)
-          .compareTo(DateFormat('MMM yy').parse(b.key)));
+        .toList();
+
+    // Sort based on display mode
+    if (displayMode == ChartDisplayMode.daily) {
+      sortedData.sort((a, b) {
+        try {
+          // Try both formats for daily view
+          DateTime dateA, dateB;
+          try {
+            dateA = DateFormat('MMM dd, yy').parse(a.key);
+          } catch (e) {
+            dateA = DateFormat('MMM dd').parse(a.key);
+          }
+          try {
+            dateB = DateFormat('MMM dd, yy').parse(b.key);
+          } catch (e) {
+            dateB = DateFormat('MMM dd').parse(b.key);
+          }
+          return dateA.compareTo(dateB);
+        } catch (e) {
+          return a.key.compareTo(b.key);
+        }
+      });
+    } else {
+      sortedData.sort((a, b) {
+        try {
+          final dateA = DateFormat('MMM yy').parse(a.key);
+          final dateB = DateFormat('MMM yy').parse(b.key);
+          return dateA.compareTo(dateB);
+        } catch (e) {
+          return a.key.compareTo(b.key);
+        }
+      });
+    }
 
     return sortedData;
   }

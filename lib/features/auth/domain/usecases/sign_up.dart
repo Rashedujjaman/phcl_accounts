@@ -7,14 +7,22 @@ class SignUp {
   SignUp(this.repository);
 
   Future<void> call(
-    String email,
-    String password,
-    String name,
+    String firstName,
+    String lastName,
     String contactNo,
     String role,
+    String email,
+    String password,
   ) async {
     try {
-      await repository.signUp(email, password, name, contactNo, role);
+      await repository.signUp(
+        firstName,
+        lastName,
+        contactNo,
+        role,
+        email,
+        password,
+      );
     } on FirebaseAuthFailure {
       rethrow;
     } catch (e) {

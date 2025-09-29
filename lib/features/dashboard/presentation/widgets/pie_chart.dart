@@ -6,15 +6,17 @@ class PieChart extends StatelessWidget {
   final List<ChartData> data;
   final String title;
   final Color? borderColor;
+  final Color? backgroundColor;
 
-  const PieChart({super.key, required this.data, required this.title, this.borderColor});
+  const PieChart({super.key, required this.data, required this.title, this.borderColor, this.backgroundColor});
 
   @override
   Widget build(BuildContext context) {
     return SfCircularChart(
-      title: ChartTitle(text: title),
-      borderColor: borderColor ?? Colors.transparent,
+      title: ChartTitle(text: title, textStyle: TextStyle(color: borderColor ?? Theme.of(context).colorScheme.onSurface)),
+      borderColor: borderColor ?? Theme.of(context).colorScheme.outline,
       borderWidth: 1,
+      backgroundColor: backgroundColor,
       tooltipBehavior: TooltipBehavior(enable: true),
       legend: const Legend(
         isVisible: true,
