@@ -103,16 +103,16 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                 vertical: 16,
               ),
             ),
-            controller: TextEditingController(
-              text: _selectedCategory ?? '',
-            ),
-            validator: (value) =>
-                (value == null || value.isEmpty) ? 'Please select a category' : null,
+            controller: TextEditingController(text: _selectedCategory ?? ''),
+            validator: (value) => (value == null || value.isEmpty)
+                ? 'Please select a category'
+                : null,
             onTap: () async {
-              final RenderBox renderBox = context.findRenderObject() as RenderBox;
+              final RenderBox renderBox =
+                  context.findRenderObject() as RenderBox;
               final position = renderBox.localToGlobal(Offset.zero);
               final size = renderBox.size;
-              
+
               final selectedValue = await showMenu<String>(
                 context: context,
                 position: RelativeRect.fromLTRB(
@@ -148,7 +148,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               );
-              
+
               if (selectedValue != null && mounted) {
                 setState(() => _selectedCategory = selectedValue);
               }
@@ -369,7 +369,9 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                       return Container(
                         width: 60,
                         height: 60,
-                        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHigh,
                         child: const Center(child: CircularProgressIndicator()),
                       );
                     },
@@ -421,16 +423,16 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                             ? 'Word Document'
                             : 'File',
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant, 
-                          fontSize: 12
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 12,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${(fileSize / 1024).toStringAsFixed(1)} KB',
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant, 
-                          fontSize: 12
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontSize: 12,
                         ),
                       ),
                     ],
