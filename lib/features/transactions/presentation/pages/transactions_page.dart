@@ -353,20 +353,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
     BuildContext context,
     String type,
   ) async {
-    // Get the current state before navigation
+    // Get the bloc instance
     final bloc = context.read<TransactionBloc>();
-    final currentState = bloc.state;
-
-    // Store the current filter values
-    DateTime? startDate;
-    DateTime? endDate;
-    String? currentType;
-
-    if (currentState is TransactionLoaded) {
-      startDate = currentState.currentStartDate;
-      endDate = currentState.currentEndDate;
-      currentType = currentState.currentType;
-    }
 
     // Navigate to add transaction page
     final result = await Navigator.push<bool>(
@@ -382,14 +370,14 @@ class _TransactionsPageState extends State<TransactionsPage> {
     // Check if widget is still mounted
     if (!mounted) return;
 
-    // Handle the return result
+    // Handle the return result - always reload with current widget state filters
     if (result == null || result == false) {
-      // Always reload with the original filters
+      // Use the current widget state variables to preserve filters
       bloc.add(
         LoadTransactions(
-          startDate: startDate,
-          endDate: endDate,
-          type: currentType,
+          startDate: _dateRange?.start,
+          endDate: _dateRange?.end,
+          type: _selectedType,
         ),
       );
     }
@@ -473,20 +461,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
     BuildContext context,
     TransactionEntity transaction,
   ) async {
-    // Get the current state before navigation
+    // Get the bloc instance
     final bloc = context.read<TransactionBloc>();
-    final currentState = bloc.state;
-
-    // Store the current filter values
-    DateTime? startDate;
-    DateTime? endDate;
-    String? currentType;
-
-    if (currentState is TransactionLoaded) {
-      startDate = currentState.currentStartDate;
-      endDate = currentState.currentEndDate;
-      currentType = currentState.currentType;
-    }
 
     // Navigate to edit transaction page using AddTransactionPage with existing transaction
     final result = await Navigator.push<bool>(
@@ -505,14 +481,14 @@ class _TransactionsPageState extends State<TransactionsPage> {
     // Check if widget is still mounted
     if (!mounted) return;
 
-    // Handle the return result
+    // Handle the return result - always reload with current widget state filters
     if (result == null || result == false) {
-      // Always reload with the original filters
+      // Use the current widget state variables to preserve filters
       bloc.add(
         LoadTransactions(
-          startDate: startDate,
-          endDate: endDate,
-          type: currentType,
+          startDate: _dateRange?.start,
+          endDate: _dateRange?.end,
+          type: _selectedType,
         ),
       );
     }
