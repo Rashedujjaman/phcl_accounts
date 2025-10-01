@@ -11,8 +11,13 @@ import 'package:phcl_accounts/features/transactions/presentation/bloc/transactio
 
 class AddTransactionPage extends StatefulWidget {
   final String transactionType;
+  final TransactionEntity? existingTransaction;
 
-  const AddTransactionPage({super.key, required this.transactionType});
+  const AddTransactionPage({
+    super.key,
+    required this.transactionType,
+    this.existingTransaction,
+  });
 
   @override
   State<AddTransactionPage> createState() => _AddTransactionPageState();
@@ -36,6 +41,23 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   void initState() {
     super.initState();
     context.read<TransactionBloc>().add(LoadCategories(widget.transactionType));
+
+    // If editing an existing transaction, populate the form fields
+    if (widget.existingTransaction != null) {
+      _populateFormWithExistingData();
+    }
+  }
+
+  void _populateFormWithExistingData() {
+    final transaction = widget.existingTransaction!;
+    _amountController.text = transaction.amount.toString();
+    _noteController.text = transaction.note ?? '';
+    _clientIdController.text = transaction.clientId ?? '';
+    _contactNoController.text = transaction.contactNo ?? '';
+    _transactByController.text = transaction.transactBy ?? '';
+    _selectedDate = transaction.date;
+    _selectedCategory = transaction.category;
+    _attachmentUrl = transaction.attachmentUrl;
   }
 
   @override
@@ -49,7 +71,9 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Add ${widget.transactionType.capitalize()}'),
+          title: Text(
+            '${widget.existingTransaction != null ? 'Edit' : 'Add'} ${widget.transactionType.capitalize()}',
+          ),
           backgroundColor: widget.transactionType == 'income'
               ? Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.5)
               : Theme.of(context).colorScheme.error.withValues(alpha: 0.5),
@@ -491,7 +515,9 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
         ),
       ),
       child: Text(
-        'Submit Transaction',
+        widget.existingTransaction != null
+            ? 'Update Transaction'
+            : 'Submit Transaction',
         style: TextStyle(
           fontSize: 16,
           fontWeight: FontWeight.bold,
@@ -507,13 +533,17 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
       showDialog(
         context: context,
         barrierDismissible: false,
-        builder: (context) => const AlertDialog(
+        builder: (context) => AlertDialog(
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(padding: EdgeInsets.all(16)),
-              SizedBox(height: 16),
-              Text('Processing transaction...'),
+              const CircularProgressIndicator(padding: EdgeInsets.all(16)),
+              const SizedBox(height: 16),
+              Text(
+                widget.existingTransaction != null
+                    ? 'Updating transaction...'
+                    : 'Processing transaction...',
+              ),
             ],
           ),
         ),
@@ -533,6 +563,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
 
         // Create transaction
         final transaction = TransactionEntity(
+          id: widget.existingTransaction?.id, // Keep existing ID when updating
           type: widget.transactionType,
           category: _selectedCategory!,
           date: _selectedDate,
@@ -547,15 +578,30 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
               ? _contactNoController.text
               : null,
           note: _noteController.text.isNotEmpty ? _noteController.text : null,
-          attachmentUrl: _attachmentUrl,
-          attachmentType: _attachment?.name.split('.').last.toLowerCase(),
+          attachmentUrl:
+              _attachmentUrl ?? widget.existingTransaction?.attachmentUrl,
+          attachmentType:
+              _attachment?.name.split('.').last.toLowerCase() ??
+              widget.existingTransaction?.attachmentType,
         );
 
-        // Add transaction
+        // Add or update transaction
         if (mounted) {
-          context.read<TransactionBloc>().add(
-            AddTransaction(transaction: transaction),
-          );
+          if (widget.existingTransaction != null) {
+            // Update existing transaction
+            context.read<TransactionBloc>().add(
+              UpdateTransaction(
+                transaction,
+                _selectedDate, // startDate
+                _selectedDate, // endDate
+              ),
+            );
+          } else {
+            // Add new transaction
+            context.read<TransactionBloc>().add(
+              AddTransaction(transaction: transaction),
+            );
+          }
 
           Navigator.pop(context); // Close loading dialog
           Navigator.pop(context, true); // Close the form

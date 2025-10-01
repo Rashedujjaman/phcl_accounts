@@ -62,9 +62,12 @@ class _TransactionItemState extends State<TransactionItem>
     if (widget.onDelete != null) actionCount++;
     if (widget.onEdit != null && widget.showEditButton) actionCount++;
 
-    // If no swipe actions are available, return the simple card
+    // If no swipe actions are available, return the simple card with gesture detection for onTap
     if (actionCount == 0) {
-      return _buildTransactionCard(theme, color, icon);
+      return GestureDetector(
+        onTap: widget.onTap,
+        child: _buildTransactionCard(theme, color, icon),
+      );
     }
 
     // Calculate max slide distance (half of screen width, but limited)
@@ -150,6 +153,7 @@ class _TransactionItemState extends State<TransactionItem>
     return Card(
       margin: const EdgeInsets.all(0),
       child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           color: theme.colorScheme.surfaceContainer,
@@ -160,9 +164,13 @@ class _TransactionItemState extends State<TransactionItem>
             backgroundColor: color.withValues(alpha: 0.2),
             child: Icon(icon, color: color),
           ),
-          title: Text(widget.transaction.category),
+          title: Text(
+            widget.transaction.category,
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+          ),
           subtitle: Text(
             DateFormat('MMM dd, yyyy').format(widget.transaction.date),
+            style: TextStyle(fontSize: 12),
           ),
           trailing: Text(
             NumberFormat.currency(

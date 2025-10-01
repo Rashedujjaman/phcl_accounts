@@ -85,8 +85,9 @@ class TransactionRepositoryImpl implements TransactionRepository {
   @override
   Future<void> updateTransaction(TransactionEntity transaction) async {
     try {
-      if (transaction.id == null)
+      if (transaction.id == null) {
         throw const FirebaseFailure('Transaction ID is required');
+      }
 
       await _firestore.collection('transactions').doc(transaction.id).update({
         'type': transaction.type,
@@ -99,6 +100,7 @@ class TransactionRepositoryImpl implements TransactionRepository {
         'attachmentUrl': transaction.attachmentUrl,
         'updatedBy': _auth.currentUser?.uid,
         'dateUpdated': FieldValue.serverTimestamp(),
+        'transactBy': transaction.transactBy,
       });
     } on FirebaseException catch (e) {
       throw FirebaseFailure.fromCode(e.code);

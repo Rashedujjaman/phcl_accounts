@@ -473,25 +473,48 @@ class _TransactionsPageState extends State<TransactionsPage> {
     BuildContext context,
     TransactionEntity transaction,
   ) async {
-    // For now, show a dialog that editing will be available in a future update
-    // TODO: Implement proper edit transaction page
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Edit Transaction'),
-          content: const Text(
-            'Transaction editing functionality will be available in a future update. '
-            'For now, you can delete this transaction and create a new one.',
+    // Get the current state before navigation
+    final bloc = context.read<TransactionBloc>();
+    final currentState = bloc.state;
+
+    // Store the current filter values
+    DateTime? startDate;
+    DateTime? endDate;
+    String? currentType;
+
+    if (currentState is TransactionLoaded) {
+      startDate = currentState.currentStartDate;
+      endDate = currentState.currentEndDate;
+      currentType = currentState.currentType;
+    }
+
+    // Navigate to edit transaction page using AddTransactionPage with existing transaction
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BlocProvider.value(
+          value: bloc,
+          child: AddTransactionPage(
+            transactionType: transaction.type,
+            existingTransaction: transaction,
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
-            ),
-          ],
-        );
-      },
+        ),
+      ),
     );
+
+    // Check if widget is still mounted
+    if (!mounted) return;
+
+    // Handle the return result
+    if (result == null || result == false) {
+      // Always reload with the original filters
+      bloc.add(
+        LoadTransactions(
+          startDate: startDate,
+          endDate: endDate,
+          type: currentType,
+        ),
+      );
+    }
   }
 }
