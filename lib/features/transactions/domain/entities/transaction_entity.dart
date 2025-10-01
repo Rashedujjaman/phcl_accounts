@@ -17,7 +17,8 @@ class TransactionEntity {
   final bool? isDeleted;
   final String? deletedBy;
   final DateTime? updatedAt;
-  
+  final String? transactBy;
+
   TransactionEntity({
     this.id,
     required this.type,
@@ -35,6 +36,7 @@ class TransactionEntity {
     this.isDeleted = false,
     this.deletedBy,
     this.updatedAt,
+    this.transactBy,
   });
 
   Map<String, dynamic> toMap() {
@@ -54,6 +56,7 @@ class TransactionEntity {
       'isDeleted': isDeleted,
       'deletedBy': deletedBy,
       'updatedAt': updatedAt,
+      'transactBy': transactBy,
     };
   }
 
@@ -75,6 +78,7 @@ class TransactionEntity {
       isDeleted: json['isDeleted'] ?? false,
       deletedBy: json['deletedBy'],
       updatedAt: DateTime.parse(json['updatedAt']),
+      transactBy: json['transactBy'],
     );
   }
 
@@ -84,7 +88,9 @@ class TransactionEntity {
       id: doc.id,
       type: data['type'] ?? '',
       category: data['category'] ?? '',
-      date: (data['date'] != null && data['date'] is Timestamp) ? (data['date'] as Timestamp).toDate() : DateTime.now(),
+      date: (data['date'] != null && data['date'] is Timestamp)
+          ? (data['date'] as Timestamp).toDate()
+          : DateTime.now(),
       amount: (data['amount'] != null) ? data['amount'].toDouble() : 0.0,
       clientId: data['clientId'],
       contactNo: data['contactNo'],
@@ -92,11 +98,16 @@ class TransactionEntity {
       attachmentUrl: data['attachmentUrl'],
       attachmentType: data['attachmentType'],
       createdBy: data['createdBy'],
-      createdAt: (data['createdAt'] != null && data['createdAt'] is Timestamp) ? (data['createdAt'] as Timestamp).toDate() : null,
+      createdAt: (data['createdAt'] != null && data['createdAt'] is Timestamp)
+          ? (data['createdAt'] as Timestamp).toDate()
+          : null,
       updatedBy: data['updatedBy'],
       isDeleted: data['isDeleted'] ?? false,
       deletedBy: data['deletedBy'],
-      updatedAt: (data['updatedAt'] != null && data['updatedAt'] is Timestamp) ? (data['updatedAt'] as Timestamp).toDate() : null,
+      updatedAt: (data['updatedAt'] != null && data['updatedAt'] is Timestamp)
+          ? (data['updatedAt'] as Timestamp).toDate()
+          : null,
+      transactBy: data['transactBy'],
     );
   }
 }

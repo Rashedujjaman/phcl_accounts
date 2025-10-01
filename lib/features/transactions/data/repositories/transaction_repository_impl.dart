@@ -15,9 +15,9 @@ class TransactionRepositoryImpl implements TransactionRepository {
     required FirebaseFirestore firestore,
     required FirebaseStorage storage,
     required FirebaseAuth auth,
-  })  : _firestore = firestore,
-        _storage = storage,
-        _auth = auth;
+  }) : _firestore = firestore,
+       _storage = storage,
+       _auth = auth;
 
   @override
   Future<void> addTransaction(TransactionEntity transaction) async {
@@ -41,10 +41,10 @@ class TransactionRepositoryImpl implements TransactionRepository {
         updatedBy: '',
         deletedBy: '',
         updatedAt: DateTime.now(),
+        transactBy: transaction.transactBy,
       );
 
       await _firestore.collection('transactions').add(newTransaction.toMap());
-
     } on FirebaseException catch (e) {
       throw FirebaseFailure.fromCode(e.code);
     } catch (e) {
@@ -59,19 +59,21 @@ class TransactionRepositoryImpl implements TransactionRepository {
     String? type,
   }) async {
     try {
-      Query query = _firestore.collection('transactions')
-        .where('date', isGreaterThanOrEqualTo: startDate)
-        .where('date', isLessThanOrEqualTo: endDate)
-        .where('isDeleted', isEqualTo: false)
-        .orderBy('date', descending: true);
+      Query query = _firestore
+          .collection('transactions')
+          .where('date', isGreaterThanOrEqualTo: startDate)
+          .where('date', isLessThanOrEqualTo: endDate)
+          .where('isDeleted', isEqualTo: false)
+          .orderBy('date', descending: true);
 
       if (type != null) {
         query = query.where('type', isEqualTo: type);
       }
 
       final snapshot = await query.get();
-      return snapshot.docs.map((doc) => TransactionEntity.fromDocumentSnapshot(doc)
-      ).toList();
+      return snapshot.docs
+          .map((doc) => TransactionEntity.fromDocumentSnapshot(doc))
+          .toList();
     } on FirebaseException catch (e) {
       // print('Error fetching transactions: ${e.message}');
       throw FirebaseFailure.fromCode(e.code);
@@ -83,7 +85,8 @@ class TransactionRepositoryImpl implements TransactionRepository {
   @override
   Future<void> updateTransaction(TransactionEntity transaction) async {
     try {
-      if (transaction.id == null) throw const FirebaseFailure('Transaction ID is required');
+      if (transaction.id == null)
+        throw const FirebaseFailure('Transaction ID is required');
 
       await _firestore.collection('transactions').doc(transaction.id).update({
         'type': transaction.type,
@@ -125,8 +128,14 @@ class TransactionRepositoryImpl implements TransactionRepository {
   Future<List<String>> getCategories({required String type}) async {
     try {
       final snapshot = type == 'expense'
-          ? await _firestore.collection('expenseCategories').orderBy('name').get()
-          : await _firestore.collection('incomeCategories').orderBy('name').get();
+          ? await _firestore
+                .collection('expenseCategories')
+                .orderBy('name')
+                .get()
+          : await _firestore
+                .collection('incomeCategories')
+                .orderBy('name')
+                .get();
 
       return snapshot.docs.map((doc) => doc['name'] as String).toList();
     } on FirebaseException catch (e) {
@@ -150,16 +159,15 @@ class TransactionRepositoryImpl implements TransactionRepository {
 
       if (userId == null) throw const FirebaseFailure('Unauthenticated');
 
-      final ref = _storage.ref().child('attachments/$type/${DateTime.now().millisecondsSinceEpoch}');
+      final ref = _storage.ref().child(
+        'attachments/$type/${DateTime.now().millisecondsSinceEpoch}',
+      );
       final uploadTask = ref.putFile(file);
       final snapshot = await uploadTask;
 
       final downloadUrl = await snapshot.ref.getDownloadURL();
 
-      return {
-        'url': downloadUrl,
-        'type': extension,
-      };
+      return {'url': downloadUrl, 'type': extension};
     } on FirebaseException catch (e) {
       throw FirebaseFailure.fromCode(e.code);
     } catch (e) {

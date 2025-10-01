@@ -13,7 +13,9 @@ class TransactionDetailsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isIncome = transaction.type == 'income';
-    final color = isIncome ? theme.colorScheme.tertiary : theme.colorScheme.error;
+    final color = isIncome
+        ? theme.colorScheme.tertiary
+        : theme.colorScheme.error;
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
@@ -36,7 +38,7 @@ class TransactionDetailsSheet extends StatelessWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          
+
           // Header with close button
           Padding(
             padding: const EdgeInsets.fromLTRB(24, 8, 16, 16),
@@ -75,7 +77,7 @@ class TransactionDetailsSheet extends StatelessWidget {
               ],
             ),
           ),
-          
+
           // Content
           Expanded(
             child: SingleChildScrollView(
@@ -93,7 +95,9 @@ class TransactionDetailsSheet extends StatelessWidget {
                       border: Border.all(color: color.withValues(alpha: 0.15)),
                       boxShadow: [
                         BoxShadow(
-                          color: theme.colorScheme.shadow.withValues(alpha: 0.05),
+                          color: theme.colorScheme.shadow.withValues(
+                            alpha: 0.05,
+                          ),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -102,7 +106,10 @@ class TransactionDetailsSheet extends StatelessWidget {
                     child: Column(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: color.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(20),
@@ -119,7 +126,9 @@ class TransactionDetailsSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          NumberFormat.currency(symbol: '৳ ').format(transaction.amount),
+                          NumberFormat.currency(
+                            symbol: '৳ ',
+                          ).format(transaction.amount),
                           style: TextStyle(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
@@ -129,31 +138,55 @@ class TransactionDetailsSheet extends StatelessWidget {
                       ],
                     ),
                   ),
-                  
+
                   const SizedBox(height: 12),
-                  
+
                   // Transaction Details
-                  _buildDetailRow(context, 'Date', DateFormat('MMM dd, yyyy - hh:mm a').format(transaction.date)),
-                  if (transaction.clientId != null && transaction.clientId != '')
-                    _buildDetailRow(context, 'Client ID', transaction.clientId!),
-                  if (transaction.contactNo != null && transaction.contactNo != '')
-                    _buildDetailRow(context, 'Contact No', transaction.contactNo!),
+                  _buildDetailRow(
+                    context,
+                    'Date',
+                    DateFormat(
+                      'MMM dd, yyyy - hh:mm a',
+                    ).format(transaction.date),
+                  ),
+                  if (transaction.clientId != null &&
+                      transaction.clientId != '')
+                    _buildDetailRow(
+                      context,
+                      'Client ID',
+                      transaction.clientId!,
+                    ),
+                  if (transaction.contactNo != null &&
+                      transaction.contactNo != '')
+                    _buildDetailRow(
+                      context,
+                      'Contact No',
+                      transaction.contactNo!,
+                    ),
                   if (transaction.note != null && transaction.note != '')
                     _buildDetailRow(context, 'Note', transaction.note!),
                   if (transaction.id != null)
                     _buildDetailRow(context, 'Transaction ID', transaction.id!),
-                  
-                  if (transaction.attachmentUrl != null && transaction.attachmentUrl != '') ...[
+                  if (transaction.transactBy != null &&
+                      transaction.transactBy != '')
+                    _buildDetailRow(
+                      context,
+                      'Transact By',
+                      transaction.transactBy!,
+                    ),
+
+                  if (transaction.attachmentUrl != null &&
+                      transaction.attachmentUrl != '') ...[
                     const SizedBox(height: 16),
                     _buildAttachmentSection(context),
                   ],
-                  
+
                   const SizedBox(height: 32),
                 ],
               ),
             ),
           ),
-          
+
           // Bottom action bar
           _buildBottomActionBar(context),
         ],
@@ -240,7 +273,7 @@ class TransactionDetailsSheet extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           AttachmentViewer(
-            url: transaction.attachmentUrl!, 
+            url: transaction.attachmentUrl!,
             fileName: '${transaction.category}_${transaction.id}_attachment',
             fileType: transaction.attachmentType,
           ),
@@ -306,7 +339,12 @@ class TransactionDetailsSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildDetailRow(BuildContext context, String label, String value, {Color? color}) {
+  Widget _buildDetailRow(
+    BuildContext context,
+    String label,
+    String value, {
+    Color? color,
+  }) {
     final theme = Theme.of(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -338,6 +376,7 @@ class TransactionDetailsSheet extends StatelessWidget {
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: color ?? theme.colorScheme.onSurface,
                 fontWeight: FontWeight.w500,
+                fontSize: label == 'Transaction ID' ? 12 : 14,
               ),
             ),
           ),

@@ -24,6 +24,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   final _noteController = TextEditingController();
   final _clientIdController = TextEditingController();
   final _contactNoController = TextEditingController();
+  final _transactByController = TextEditingController();
 
   DateTime _selectedDate = DateTime.now();
   String? _selectedCategory;
@@ -49,6 +50,10 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
       child: Scaffold(
         appBar: AppBar(
           title: Text('Add ${widget.transactionType.capitalize()}'),
+          backgroundColor: widget.transactionType == 'income'
+              ? Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.5)
+              : Theme.of(context).colorScheme.error.withValues(alpha: 0.5),
+          // backgroundColor: Theme.of(context).colorScheme.primary,
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -59,6 +64,8 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
                 _buildDatePicker(),
                 const SizedBox(height: 16),
                 _buildCategoryDropdown(),
+                const SizedBox(height: 16),
+                _buildTransactByField(),
                 const SizedBox(height: 16),
                 _buildAmountField(),
                 const SizedBox(height: 16),
@@ -157,6 +164,16 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
         }
         return const Text('Failed to load categories');
       },
+    );
+  }
+
+  Widget _buildTransactByField() {
+    return TextFormField(
+      controller: _transactByController,
+      decoration: const InputDecoration(
+        labelText: 'Transact By',
+        border: OutlineInputBorder(),
+      ),
     );
   }
 
@@ -459,16 +476,28 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     return ElevatedButton(
       onPressed: _submitForm,
       style: ElevatedButton.styleFrom(
+        backgroundColor: widget.transactionType == 'income'
+            ? Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.5)
+            : Theme.of(context).colorScheme.error.withValues(alpha: 0.5),
         minimumSize: const Size(double.infinity, 48),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: Theme.of(context).colorScheme.primary,
+            color: widget.transactionType == 'income'
+                ? Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.5)
+                : Theme.of(context).colorScheme.error.withValues(alpha: 0.5),
             width: 1.5,
           ),
         ),
       ),
-      child: const Text('Submit Transaction'),
+      child: Text(
+        'Submit Transaction',
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Theme.of(context).colorScheme.onSurface,
+        ),
+      ),
     );
   }
 
@@ -507,6 +536,9 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
           type: widget.transactionType,
           category: _selectedCategory!,
           date: _selectedDate,
+          transactBy: _transactByController.text.isNotEmpty
+              ? _transactByController.text
+              : null,
           amount: double.parse(_amountController.text),
           clientId: widget.transactionType == 'income'
               ? _clientIdController.text

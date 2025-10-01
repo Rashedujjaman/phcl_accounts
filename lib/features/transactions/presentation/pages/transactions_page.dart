@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import 'package:phcl_accounts/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:phcl_accounts/features/transactions/domain/entities/transaction_entity.dart';
 import 'package:phcl_accounts/features/transactions/presentation/bloc/transaction_bloc.dart';
@@ -74,7 +75,9 @@ class _TransactionsPageState extends State<TransactionsPage> {
                 color: Theme.of(context).colorScheme.surface,
                 boxShadow: [
                   BoxShadow(
-                    color: Theme.of(context).colorScheme.shadow.withValues(alpha: 0.05),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.shadow.withValues(alpha: 0.05),
                     blurRadius: 4,
                     offset: const Offset(0, 2),
                   ),
@@ -123,12 +126,33 @@ class _TransactionsPageState extends State<TransactionsPage> {
                       itemBuilder: (context, index) {
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 8),
-                          child: TransactionItem(
-                            transaction: transactions[index],
-                            onTap: () => _showTransactionDetails(
-                              context,
-                              transactions[index],
-                            ),
+                          child: BlocBuilder<AuthBloc, AuthState>(
+                            builder: (context, authState) {
+                              final isAdmin =
+                                  authState is AuthAuthenticated &&
+                                  authState.user.role == 'admin';
+
+                              return TransactionItem(
+                                transaction: transactions[index],
+                                onTap: () => _showTransactionDetails(
+                                  context,
+                                  transactions[index],
+                                ),
+                                onDelete: isAdmin
+                                    ? () => _showDeleteConfirmDialog(
+                                        context,
+                                        transactions[index],
+                                      )
+                                    : null,
+                                onEdit: isAdmin
+                                    ? () => _editTransaction(
+                                        context,
+                                        transactions[index],
+                                      )
+                                    : null,
+                                showEditButton: isAdmin,
+                              );
+                            },
                           ),
                         );
                       },
@@ -145,7 +169,8 @@ class _TransactionsPageState extends State<TransactionsPage> {
       floatingActionButton: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           // Only show floating action buttons for authenticated users who are not guests
-          if (state is AuthAuthenticated && (state.user.role == 'admin' || state.user.role == 'user')) {
+          if (state is AuthAuthenticated &&
+              (state.user.role == 'admin' || state.user.role == 'user')) {
             return _buildFloatingActionButtons();
           }
           return const SizedBox.shrink();
@@ -271,10 +296,15 @@ class _TransactionsPageState extends State<TransactionsPage> {
                 selectedColor: Theme.of(context).colorScheme.primary,
                 checkmarkColor: Theme.of(context).colorScheme.onPrimary,
                 labelStyle: TextStyle(
-                  color: state.currentType == null ? Theme.of(context).colorScheme.onPrimary : null,
+                  color: state.currentType == null
+                      ? Theme.of(context).colorScheme.onPrimary
+                      : null,
                   fontWeight: FontWeight.w500,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
               ),
               const SizedBox(width: 8),
               FilterChip(
@@ -284,10 +314,15 @@ class _TransactionsPageState extends State<TransactionsPage> {
                 selectedColor: Theme.of(context).colorScheme.tertiary,
                 checkmarkColor: Theme.of(context).colorScheme.onTertiary,
                 labelStyle: TextStyle(
-                  color: state.currentType == 'income' ? Theme.of(context).colorScheme.onTertiary : null,
+                  color: state.currentType == 'income'
+                      ? Theme.of(context).colorScheme.onTertiary
+                      : null,
                   fontWeight: FontWeight.w500,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
               ),
               const SizedBox(width: 8),
               FilterChip(
@@ -297,10 +332,15 @@ class _TransactionsPageState extends State<TransactionsPage> {
                 selectedColor: Theme.of(context).colorScheme.error,
                 checkmarkColor: Theme.of(context).colorScheme.onError,
                 labelStyle: TextStyle(
-                  color: state.currentType == 'expense' ? Theme.of(context).colorScheme.onError : null,
+                  color: state.currentType == 'expense'
+                      ? Theme.of(context).colorScheme.onError
+                      : null,
                   fontWeight: FontWeight.w500,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
+                ),
               ),
             ],
           ),
@@ -363,6 +403,95 @@ class _TransactionsPageState extends State<TransactionsPage> {
       context: context,
       isScrollControlled: true,
       builder: (context) => TransactionDetailsSheet(transaction: transaction),
+    );
+  }
+
+  void _showDeleteConfirmDialog(
+    BuildContext context,
+    TransactionEntity transaction,
+  ) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Transaction'),
+          content: Text(
+            'Are you sure you want to delete this ${transaction.type} transaction of ৳${NumberFormat().format(transaction.amount)}?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteTransaction(transaction);
+              },
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.error,
+              ),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteTransaction(TransactionEntity transaction) {
+    final transactionId = transaction.id;
+    if (transactionId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: Transaction ID is missing'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+      return;
+    }
+
+    context.read<TransactionBloc>().add(
+      DeleteTransaction(
+        transactionId,
+        _dateRange?.start,
+        _dateRange?.end,
+        _selectedType,
+      ),
+    );
+
+    // Show success message
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Transaction deleted successfully'),
+        backgroundColor: Theme.of(context).colorScheme.error,
+      ),
+    );
+  }
+
+  Future<void> _editTransaction(
+    BuildContext context,
+    TransactionEntity transaction,
+  ) async {
+    // For now, show a dialog that editing will be available in a future update
+    // TODO: Implement proper edit transaction page
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit Transaction'),
+          content: const Text(
+            'Transaction editing functionality will be available in a future update. '
+            'For now, you can delete this transaction and create a new one.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
