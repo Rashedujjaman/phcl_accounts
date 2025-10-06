@@ -1,3 +1,13 @@
+// PHCL Accounts - Main Entry Point
+// --------------------------------------------------
+// This file bootstraps the Flutter application, sets up core providers,
+// initializes Firebase, configures theme management, and wires up
+// dependency injection and state management using BLoC and Provider.
+//
+// Architecture: Clean Architecture (Domain/Data/Presentation layers)
+// State Management: BLoC (flutter_bloc), Provider
+// Backend: Firebase (Auth, Firestore, Storage)
+// --------------------------------------------------
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -27,20 +37,25 @@ import 'package:phcl_accounts/features/transactions/data/repositories/transactio
 import 'package:phcl_accounts/features/transactions/domain/repositories/transaction_repository.dart';
 import 'package:phcl_accounts/features/transactions/presentation/bloc/transaction_bloc.dart';
 
+/// Main entry point for PHCL Accounts app.
+/// Initializes Flutter bindings, Firebase, and theme provider before launching the app.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  
-  // Initialize theme provider
+
+  // ThemeProvider manages light/dark mode and persists user preference.
   final themeProvider = ThemeProvider();
   await themeProvider.initialize();
-  
+
   runApp(MyApp(themeProvider: themeProvider));
 }
 
+/// Root widget for the application.
+/// Sets up dependency injection (RepositoryProvider), state management (BlocProvider),
+/// and theme management (ChangeNotifierProvider).
 class MyApp extends StatelessWidget {
   final ThemeProvider themeProvider;
-  
+
   const MyApp({super.key, required this.themeProvider});
 
   @override
@@ -51,6 +66,7 @@ class MyApp extends StatelessWidget {
         builder: (context, themeProvider, child) {
           return MultiRepositoryProvider(
             providers: [
+              // AuthRepositoryImpl: Handles authentication and user profile operations.
               RepositoryProvider<AuthRepositoryImpl>(
                 create: (context) => AuthRepositoryImpl(
                   firebaseAuth: FirebaseAuth.instance,
@@ -58,12 +74,14 @@ class MyApp extends StatelessWidget {
                   storage: FirebaseStorage.instance
                 ),
               ),
+              // DashboardRepository: Handles analytics and dashboard data.
               RepositoryProvider<DashboardRepository>(
                 create: (context) => DashboardRepositoryImpl(
                   auth: FirebaseAuth.instance,
                   firestore: FirebaseFirestore.instance,
                 ),
               ),
+              // TransactionRepository: Handles CRUD operations for financial transactions.
               RepositoryProvider<TransactionRepository>(
                 create: (context) => TransactionRepositoryImpl(
                   firestore: FirebaseFirestore.instance,
@@ -74,6 +92,7 @@ class MyApp extends StatelessWidget {
             ],
             child: MultiBlocProvider(
               providers: [
+                // AuthBloc: Manages authentication state and user session.
                 BlocProvider(
                   create: (context) => AuthBloc(
                     signIn: SignIn(context.read<AuthRepositoryImpl>()),
@@ -83,6 +102,7 @@ class MyApp extends StatelessWidget {
                     updateUserProfile: UpdateUserProfile(context.read<AuthRepositoryImpl>()),
                   )..add(CheckAuthStatusEvent()),
                 ),
+                // DashboardBloc: Manages dashboard analytics and chart data.
                 BlocProvider(
                   create: (context) => DashboardBloc(
                     getDashboardData: GetDashboardData(
@@ -90,6 +110,7 @@ class MyApp extends StatelessWidget {
                     ),
                   ),
                 ),
+                // TransactionBloc: Handles transaction list, creation, and updates.
                 BlocProvider(
                   create: (context) =>
                       TransactionBloc(context.read<TransactionRepository>()),
@@ -118,6 +139,8 @@ class MyApp extends StatelessWidget {
   }
 }
 
+/// AuthWrapper: Decides which screen to show based on authentication state.
+/// Shows MainNavigation if user is authenticated, otherwise shows LoginPage.
 class AuthWrapper extends StatelessWidget {
   const AuthWrapper({super.key});
 
@@ -127,11 +150,14 @@ class AuthWrapper extends StatelessWidget {
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
+          // Show loading indicator while checking auth state.
           return const Center(child: CircularProgressIndicator());
         }
         if (snapshot.hasData) {
+          // User is authenticated, show main navigation.
           return const MainNavigation();
         } else {
+          // User is not authenticated, show login page.
           return LoginPage();
         }
       },
