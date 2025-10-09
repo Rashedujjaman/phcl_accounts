@@ -10,6 +10,21 @@ import 'package:phcl_accounts/features/dashboard/presentation/widgets/pie_chart.
 import 'package:phcl_accounts/features/dashboard/presentation/widgets/dashboard_skeleton.dart';
 import 'package:phcl_accounts/core/widgets/skeleton_widgets.dart';
 
+/// Main dashboard page displaying comprehensive financial analytics and metrics.
+///
+/// Provides an interactive financial overview with the following key features:
+/// - Real-time financial summary (net revenue, total income, total expense)
+/// - Interactive date range filtering with preset options
+/// - Animated charts for trend analysis (daily/monthly views)
+/// - Category-wise distribution charts (pie charts)
+/// - Financial health indicators and ratios
+/// - Pull-to-refresh functionality
+/// - Skeleton loading states for smooth UX
+/// - Automatic keep-alive for performance optimization
+///
+/// The dashboard uses BLoC pattern for state management and provides smooth
+/// animations for enhanced user experience. All monetary values are displayed
+/// in Bangladeshi Taka (৳) with proper formatting and responsive text sizing.
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
 
@@ -17,98 +32,172 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
+/// State class for DashboardPage with animation and lifecycle management.
+///
+/// Implements AutomaticKeepAliveClientMixin to preserve state when navigating
+/// between tabs and TickerProviderStateMixin for smooth animations.
+class _DashboardPageState extends State<DashboardPage>
+    with AutomaticKeepAliveClientMixin, TickerProviderStateMixin {
+  /// Current selected date range for filtering dashboard data
   DateTimeRange? _dateRange;
+
+  /// Animation controller for smooth number transitions and card animations
   late AnimationController _animationController;
+
+  /// Curved animation for natural easing effects
   late Animation<double> _animation;
 
   @override
   void initState() {
     super.initState();
+
+    // Initialize animation system for smooth value transitions
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+      duration: const Duration(
+        milliseconds: 1200,
+      ), // 1.2 seconds for smooth animation
       vsync: this,
     );
     _animation = CurvedAnimation(
       parent: _animationController,
-      curve: Curves.easeInOut,
+      curve: Curves.easeInOut, // Natural easing for professional feel
     );
+
+    // Load initial dashboard data with default date range
     _loadInitialData();
   }
 
   @override
   void dispose() {
+    // Clean up animation resources to prevent memory leaks
     _animationController.dispose();
     super.dispose();
   }
 
+  /// Keep the dashboard alive when switching tabs for better performance
   @override
   bool get wantKeepAlive => true;
 
-  /// Determines appropriate text style based on amount size
-  TextStyle _getAmountTextStyle(BuildContext context, double amount, {bool isMainCard = false}) {
+  /// Determines responsive text style based on monetary amount magnitude.
+  ///
+  /// Implements adaptive typography that scales appropriately with large financial values
+  /// to prevent UI overflow and maintain readability across different amount ranges.
+  ///
+  /// Parameters:
+  /// - [context]: Build context for theme access
+  /// - [amount]: Monetary value to determine styling for
+  /// - [isMainCard]: Whether this is for the main net revenue card (larger emphasis)
+  ///
+  /// Returns:
+  /// - [TextStyle]: Appropriately sized text style for the given amount
+  ///
+  /// Amount Ranges (Indian currency system):
+  /// - 10 crore+ (100,000,000): Smallest text to fit large numbers
+  /// - 1-10 crore (10,000,000-99,999,999): Small to medium text
+  /// - 10 lakh-1 crore (1,000,000-9,999,999): Medium text
+  /// - Below 10 lakh (< 1,000,000): Large text for readability
+  TextStyle _getAmountTextStyle(
+    BuildContext context,
+    double amount, {
+    bool isMainCard = false,
+  }) {
     final theme = Theme.of(context);
     final absoluteAmount = amount.abs();
-    
+
     if (isMainCard) {
-      // For the main net revenue card
-      if (absoluteAmount >= 100000000) { // 10 crore+
+      // Responsive typography for main net revenue card
+      if (absoluteAmount >= 100000000) {
+        // 10 crore+ - use smaller text to fit
         return theme.textTheme.headlineSmall?.copyWith(
-          fontWeight: FontWeight.bold,
-          fontSize: 20,
-        ) ?? const TextStyle();
-      } else if (absoluteAmount >= 10000000) { // 1 crore+
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+            ) ??
+            const TextStyle();
+      } else if (absoluteAmount >= 10000000) {
+        // 1 crore+ - medium size
         return theme.textTheme.headlineSmall?.copyWith(
-          fontWeight: FontWeight.bold,
-          fontSize: 24,
-        ) ?? const TextStyle();
-      } else if (absoluteAmount >= 1000000) { // 10 lakh+
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+            ) ??
+            const TextStyle();
+      } else if (absoluteAmount >= 1000000) {
+        // 10 lakh+ - larger size
         return theme.textTheme.headlineMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-        ) ?? const TextStyle();
+              fontWeight: FontWeight.bold,
+            ) ??
+            const TextStyle();
       } else {
+        // Below 10 lakh - largest size for impact
         return theme.textTheme.headlineLarge?.copyWith(
-          fontWeight: FontWeight.bold,
-        ) ?? const TextStyle();
+              fontWeight: FontWeight.bold,
+            ) ??
+            const TextStyle();
       }
     } else {
-      // For income/expense cards
-      if (absoluteAmount >= 100000000) { // 10 crore+
+      // Responsive typography for secondary cards (income/expense)
+      if (absoluteAmount >= 100000000) {
+        // 10 crore+ - compact text
         return theme.textTheme.bodyMedium?.copyWith(
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-        ) ?? const TextStyle();
-      } else if (absoluteAmount >= 10000000) { // 1 crore+
-        return theme.textTheme.titleSmall?.copyWith(
-          fontSize: 14,
-        ) ?? const TextStyle();
-      } else if (absoluteAmount >= 1000000) { // 10 lakh+
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ) ??
+            const TextStyle();
+      } else if (absoluteAmount >= 10000000) {
+        // 1 crore+ - small text
+        return theme.textTheme.titleSmall?.copyWith(fontSize: 14) ??
+            const TextStyle();
+      } else if (absoluteAmount >= 1000000) {
+        // 10 lakh+ - medium text
         return theme.textTheme.titleMedium?.copyWith() ?? const TextStyle();
       } else {
+        // Below 10 lakh - larger text
         return theme.textTheme.titleLarge?.copyWith() ?? const TextStyle();
       }
     }
   }
 
-  /// Creates an animated number widget with proper formatting
-  Widget _buildAnimatedAmount(double amount, {
+  /// Creates an animated monetary amount widget with smooth number transitions.
+  ///
+  /// Provides engaging visual feedback through smooth counting animations from 0 to
+  /// the target value, enhancing user experience with professional polish.
+  ///
+  /// Parameters:
+  /// - [amount]: Target monetary value to animate to
+  /// - [color]: Text color for the amount display
+  /// - [isMainCard]: Whether this is for the main card (affects text sizing)
+  ///
+  /// Returns:
+  /// - [Widget]: Animated text widget with currency formatting (Bangladeshi Taka)
+  ///
+  /// Features:
+  /// - Smooth counting animation from 0 to target value
+  /// - Automatic text scaling to prevent overflow
+  /// - Proper currency formatting with ৳ symbol
+  /// - Responsive typography based on amount magnitude
+  Widget _buildAnimatedAmount(
+    double amount, {
     required Color color,
     bool isMainCard = false,
   }) {
     return AnimatedBuilder(
       animation: _animation,
       builder: (context, child) {
+        // Calculate interpolated value for smooth counting effect
         final animatedValue = Tween<double>(
           begin: 0,
           end: amount,
         ).animate(_animation).value;
-        
+
         return FittedBox(
-          fit: BoxFit.scaleDown,
+          fit: BoxFit.scaleDown, // Scale down if needed to prevent overflow
           alignment: Alignment.centerLeft,
           child: Text(
             NumberFormat.currency(symbol: '৳ ').format(animatedValue),
-            style: _getAmountTextStyle(context, amount, isMainCard: isMainCard).copyWith(color: color),
+            style: _getAmountTextStyle(
+              context,
+              amount,
+              isMainCard: isMainCard,
+            ).copyWith(color: color),
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
           ),
@@ -117,65 +206,97 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
     );
   }
 
-
+  /// Initializes dashboard with default date range (current month).
+  ///
+  /// Sets up the initial view to show current month's financial data,
+  /// providing immediate relevant insights without requiring user interaction.
+  /// This default range balances recency with meaningful data volume.
   void _loadInitialData() {
     final now = DateTime.now();
-    // final firstDayOfYear = DateTime(now.year, 1, 1);
+    // Set default range to current month for relevant recent data
     final firstDayOfMonth = DateTime(now.year, now.month, 1);
     _dateRange = DateTimeRange(start: firstDayOfMonth, end: now);
     _loadDashboardData();
   }
 
+  /// Loads dashboard data for the currently selected date range.
+  ///
+  /// Triggers BLoC event to fetch financial data and starts the animation
+  /// sequence for smooth visual transitions when data updates.
+  ///
+  /// Process:
+  /// 1. Validates date range is available
+  /// 2. Dispatches LoadDashboardData event to BLoC
+  /// 3. Resets and starts counting animations for engaging UX
   void _loadDashboardData() {
     if (_dateRange == null) return;
 
+    // Request fresh data from BLoC layer
     context.read<DashboardBloc>().add(
-      LoadDashboardData(
-        startDate: _dateRange!.start,
-        endDate: _dateRange!.end,
-      ),
+      LoadDashboardData(startDate: _dateRange!.start, endDate: _dateRange!.end),
     );
-    
-    // Reset and start animation
+
+    // Reset and start animation for smooth value transitions
     _animationController.reset();
     _animationController.forward();
   }
 
+  /// Refreshes dashboard data with pull-to-refresh functionality.
+  ///
+  /// Provides manual refresh capability for users to get the latest
+  /// financial data without navigating away from the dashboard.
+  ///
+  /// Process:
+  /// 1. Validates date range availability
+  /// 2. Dispatches RefreshDashboardData event for updated data
+  /// 3. Triggers animation reset for consistent visual feedback
   void _refreshDashboardData() {
     if (_dateRange == null) return;
-    
+
+    // Request data refresh from BLoC layer
     context.read<DashboardBloc>().add(
       RefreshDashboardData(
         startDate: _dateRange!.start,
         endDate: _dateRange!.end,
       ),
     );
-    
-    // Reset and start animation
+
+    // Reset and start animation for fresh data display
     _animationController.reset();
     _animationController.forward();
   }
 
+  /// Builds the main dashboard UI with responsive layout and state management.
+  ///
+  /// Creates a comprehensive financial dashboard with the following components:
+  /// - Pull-to-refresh functionality for data updates
+  /// - Responsive date range selector with skeleton loading
+  /// - Dynamic content based on BLoC state management
+  /// - Smooth scrolling with proper padding and spacing
+  ///
+  /// The build method maintains widget tree across rebuilds using
+  /// AutomaticKeepAliveClientMixin for optimal performance.
   @override
   Widget build(BuildContext context) {
-    super.build(context);
+    super.build(context); // Required for AutomaticKeepAliveClientMixin
+
     return Scaffold(
-      // appBar: AppBar(
-      //   title: const Text('Dashboard'),
-      // ),
       body: BlocBuilder<DashboardBloc, DashboardState>(
         builder: (context, state) {
-          return RefreshIndicator( 
+          return RefreshIndicator(
+            // Enable pull-to-refresh for manual data updates
             onRefresh: () async => _refreshDashboardData(),
-            child:  SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16), // Consistent spacing
               child: Column(
                 children: [
-                  // Show skeleton for date range selector only during initial loading
-                  (state is DashboardInitial) 
-                    ? const SkeletonDateRangeSelector()
-                    : _buildDateRangeSelector(),
+                  // Date range selector with skeleton loading for initial state
+                  (state is DashboardInitial)
+                      ? const SkeletonDateRangeSelector() // Show skeleton during initial load
+                      : _buildDateRangeSelector(), // Show actual selector when ready
                   const SizedBox(height: 20),
+
+                  // Main dashboard content managed by state
                   _buildDashboardContent(state),
                 ],
               ),
@@ -186,34 +307,63 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
     );
   }
 
+  /// Builds the interactive date range selector with preset options.
+  ///
+  /// Provides users with flexible filtering options through:
+  /// - Custom date range selection via date picker
+  /// - Convenient preset options for common time periods
+  /// - Immediate data refresh when selection changes
+  ///
+  /// Returns:
+  /// - [Widget]: Configured DateRangeSelector with preset options and callbacks
   Widget _buildDateRangeSelector() {
     return DateRangeSelector(
-      initialRange: _dateRange,
+      initialRange: _dateRange, // Current selected range
       onChanged: (range) {
+        // Update date range and refresh data when user makes selection
         if (mounted) {
+          // Ensure widget is still in tree before setState
           setState(() => _dateRange = range);
-          _loadDashboardData();
+          _loadDashboardData(); // Fetch new data for selected range
         }
       },
+      // Preset options for common financial reporting periods
       presetLabels: const [
-        'Today',
-        'This Week',
-        'This Month',
-        'Last 3 Months',
-        'Last 6 Months',
-        'This Year',
+        'Today', // Current day transactions
+        'This Week', // Current week overview
+        'This Month', // Current month (default)
+        'Last 3 Months', // Quarterly view
+        'Last 6 Months', // Semi-annual analysis
+        'This Year', // Annual overview
       ],
     );
   }
 
+  /// Builds dashboard content based on current BLoC state with proper loading states.
+  ///
+  /// Handles different dashboard states to provide appropriate UI feedback:
+  /// - Loading states: Shows skeleton placeholders for smooth UX
+  /// - Error states: Displays error message with retry functionality
+  /// - Loaded states: Shows complete dashboard with all financial data
+  /// - Refreshing states: Maintains UI while showing refresh indicator
+  ///
+  /// Parameters:
+  /// - [state]: Current DashboardState from BLoC
+  ///
+  /// Returns:
+  /// - [Widget]: Appropriate UI based on current state
   Widget _buildDashboardContent(DashboardState state) {
+    // Show skeleton loading UI during initial load or loading states
     if (state is DashboardInitial || state is DashboardLoading) {
       return Column(
         children: [
-          const SkeletonDashboardSummary(),
+          // Skeleton placeholders maintain layout structure during loading
+          const SkeletonDashboardSummary(), // Summary cards skeleton
           const SizedBox(height: 24),
-          const SkeletonDisplayModeIndicator(),
+          const SkeletonDisplayModeIndicator(), // Display mode indicator skeleton
           const SizedBox(height: 16),
+
+          // Chart skeleton placeholders with titles
           SkeletonChart(title: 'Revenue'),
           const Divider(),
           SkeletonChart(title: 'Income'),
@@ -222,6 +372,8 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
           const Divider(),
           SkeletonChart(title: 'Income vs Expense'),
           const SizedBox(height: 20),
+
+          // Pie chart skeleton placeholders
           SkeletonPieChart(title: 'Expense Breakdown'),
           const SizedBox(height: 20),
           SkeletonPieChart(title: 'Income Breakdown'),
@@ -229,37 +381,41 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
       );
     }
 
+    // Show error state with retry functionality
     if (state is DashboardError) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(state.message),
+            Text(state.message), // Display error message
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: _loadDashboardData,
+              onPressed: _loadDashboardData, // Allow user to retry
               child: const Text('Retry'),
             ),
           ],
         ),
       );
     }
-    
+
+    // Show loaded dashboard content with full financial analytics
     if (state is DashboardLoaded || state is DashboardRefreshing) {
       final data = (state as DashboardLoaded).dashboardData;
       final isRefreshing = state is DashboardRefreshing;
 
-      // Start animation when data is loaded for the first time
-      if (!isRefreshing && _animationController.status == AnimationStatus.dismissed) {
+      // Trigger animation for first-time data load (not during refresh)
+      if (!isRefreshing &&
+          _animationController.status == AnimationStatus.dismissed) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) {
-            _animationController.forward();
+            _animationController.forward(); // Start counting animations
           }
         });
       }
 
       return Column(
         children: [
+          // Show subtle refresh indicator during refresh operations
           if (isRefreshing)
             Container(
               height: 2,
@@ -271,24 +427,27 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                 borderRadius: BorderRadius.circular(1),
               ),
             ),
-          _buildSummaryCards(data),
+
+          // Core dashboard components with financial data
+          _buildSummaryCards(data), // Net revenue, income, expense cards
           const SizedBox(height: 24),
-          _buildDisplayModeIndicator(data),
+          _buildDisplayModeIndicator(data), // Daily/Monthly view indicator
           const SizedBox(height: 16),
-          _buildRevenueTrendChart(data),
-          const Divider(),
-          // const SizedBox(height: 20),
-          _buildIncomeTrendChart(data),
-          const Divider(),
-          _buildExpenseTrendChart(data),
-          const Divider(),
-          _buildIncomeVsExpenseChart(data),
-          const SizedBox(height: 20),
-          _buildExpenseCategoryDistributionChart(data),
-          const SizedBox(height: 20),
-          _buildIncomeCategoryDistributionChart(data),
 
+          // Financial trend charts with dividers for visual separation
+          _buildRevenueTrendChart(data), // Net revenue over time
+          const Divider(),
+          _buildIncomeTrendChart(data), // Income trend analysis
+          const Divider(),
+          _buildExpenseTrendChart(data), // Expense trend analysis
+          const Divider(),
+          _buildIncomeVsExpenseChart(data), // Comparative bar chart
+          const SizedBox(height: 20),
 
+          // Category distribution analysis
+          _buildExpenseCategoryDistributionChart(data), // Expense breakdown
+          const SizedBox(height: 20),
+          _buildIncomeCategoryDistributionChart(data), // Income sources
         ],
       );
     }
@@ -306,17 +465,23 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: data.netBalance >= 0 
-                ? [theme.colorScheme.primary.withValues(alpha: 0.1), theme.colorScheme.tertiary.withValues(alpha: 0.05)]
-                : [theme.colorScheme.error.withValues(alpha: 0.1), theme.colorScheme.errorContainer.withValues(alpha: 0.05)],
+              colors: data.netBalance >= 0
+                  ? [
+                      theme.colorScheme.primary.withValues(alpha: 0.1),
+                      theme.colorScheme.tertiary.withValues(alpha: 0.05),
+                    ]
+                  : [
+                      theme.colorScheme.error.withValues(alpha: 0.1),
+                      theme.colorScheme.errorContainer.withValues(alpha: 0.05),
+                    ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: data.netBalance >= 0 
-                ? theme.colorScheme.primary.withValues(alpha: 0.2)
-                : theme.colorScheme.error.withValues(alpha: 0.2),
+              color: data.netBalance >= 0
+                  ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                  : theme.colorScheme.error.withValues(alpha: 0.2),
               width: 1.5,
             ),
             boxShadow: [
@@ -335,14 +500,18 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: data.netBalance >= 0 
-                        ? theme.colorScheme.primary.withValues(alpha: 0.15)
-                        : theme.colorScheme.error.withValues(alpha: 0.15),
+                      color: data.netBalance >= 0
+                          ? theme.colorScheme.primary.withValues(alpha: 0.15)
+                          : theme.colorScheme.error.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Icon(
-                      data.netBalance >= 0 ? Icons.trending_up : Icons.trending_down,
-                      color: data.netBalance >= 0 ? theme.colorScheme.primary : theme.colorScheme.error,
+                      data.netBalance >= 0
+                          ? Icons.trending_up
+                          : Icons.trending_down,
+                      color: data.netBalance >= 0
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.error,
                       size: 28,
                     ),
                   ),
@@ -361,7 +530,9 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                         const SizedBox(height: 4),
                         _buildAnimatedAmount(
                           data.netBalance,
-                          color: data.netBalance >= 0 ? theme.colorScheme.primary : theme.colorScheme.error,
+                          color: data.netBalance >= 0
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.error,
                           isMainCard: true,
                         ),
                       ],
@@ -372,9 +543,9 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
             ],
           ),
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Income and Expense Cards Row
         Row(
           children: [
@@ -406,7 +577,9 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.tertiary.withValues(alpha: 0.15),
+                            color: theme.colorScheme.tertiary.withValues(
+                              alpha: 0.15,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
@@ -417,7 +590,9 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                         ),
                         Icon(
                           Icons.more_vert,
-                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.6,
+                          ),
                           size: 16,
                         ),
                       ],
@@ -440,9 +615,9 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                 ),
               ),
             ),
-            
+
             const SizedBox(width: 12),
-            
+
             // Expense Card
             Expanded(
               child: Container(
@@ -471,7 +646,9 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: theme.colorScheme.error.withValues(alpha: 0.15),
+                            color: theme.colorScheme.error.withValues(
+                              alpha: 0.15,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
@@ -482,7 +659,9 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                         ),
                         Icon(
                           Icons.more_vert,
-                          color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.6,
+                          ),
                           size: 16,
                         ),
                       ],
@@ -507,9 +686,9 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
             ),
           ],
         ),
-        
+
         const SizedBox(height: 16),
-        
+
         // Financial Health Indicator
         Container(
           width: double.infinity,
@@ -550,7 +729,7 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                 ],
               ),
               const SizedBox(height: 16),
-              
+
               // Income vs Expense Ratio Bar
               Row(
                 children: [
@@ -568,9 +747,9 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                               ),
                             ),
                             Text(
-                              data.totalIncome > 0 
-                                ? '${((data.totalIncome / (data.totalIncome + data.totalExpense)) * 100).toStringAsFixed(1)}%'
-                                : '0%',
+                              data.totalIncome > 0
+                                  ? '${((data.totalIncome / (data.totalIncome + data.totalExpense)) * 100).toStringAsFixed(1)}%'
+                                  : '0%',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                                 fontWeight: FontWeight.w600,
@@ -606,10 +785,18 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
                                   child: Container(
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.only(
-                                        topRight: data.totalIncome == 0 ? const Radius.circular(4) : Radius.zero,
-                                        bottomRight: data.totalIncome == 0 ? const Radius.circular(4) : Radius.zero,
-                                        topLeft: data.totalIncome == 0 ? const Radius.circular(4) : Radius.zero,
-                                        bottomLeft: data.totalIncome == 0 ? const Radius.circular(4) : Radius.zero,
+                                        topRight: data.totalIncome == 0
+                                            ? const Radius.circular(4)
+                                            : Radius.zero,
+                                        bottomRight: data.totalIncome == 0
+                                            ? const Radius.circular(4)
+                                            : Radius.zero,
+                                        topLeft: data.totalIncome == 0
+                                            ? const Radius.circular(4)
+                                            : Radius.zero,
+                                        bottomLeft: data.totalIncome == 0
+                                            ? const Radius.circular(4)
+                                            : Radius.zero,
                                       ),
                                       color: theme.colorScheme.error,
                                     ),
@@ -666,28 +853,44 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
     );
   }
 
+  /// Builds the display mode indicator showing current chart view mode.
+  ///
+  /// Provides visual feedback about the current chart aggregation level:
+  /// - Daily View: Shows day-by-day transaction patterns
+  /// - Monthly View: Shows month-by-month aggregated data
+  ///
+  /// The indicator helps users understand the granularity of the displayed data
+  /// and provides context for interpreting the financial charts.
+  ///
+  /// Parameters:
+  /// - [data]: Dashboard data containing the current display mode
+  ///
+  /// Returns:
+  /// - [Widget]: Styled indicator chip with appropriate icon and text
   Widget _buildDisplayModeIndicator(DashboardData data) {
     final theme = Theme.of(context);
-    final displayModeText = data.displayMode == ChartDisplayMode.daily ? 'Daily View' : 'Monthly View';
-    final icon = data.displayMode == ChartDisplayMode.daily ? Icons.today : Icons.calendar_view_month;
-    
+
+    // Determine display text and icon based on current mode
+    final displayModeText = data.displayMode == ChartDisplayMode.daily
+        ? 'Daily View'
+        : 'Monthly View';
+    final icon = data.displayMode == ChartDisplayMode.daily
+        ? Icons.today
+        : Icons.calendar_view_month;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: theme.colorScheme.primaryContainer.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(20), // Pill-shaped design
         border: Border.all(
           color: theme.colorScheme.primary.withValues(alpha: 0.3),
         ),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: MainAxisSize.min, // Compact layout
         children: [
-          Icon(
-            icon,
-            size: 16,
-            color: theme.colorScheme.onPrimaryContainer,
-          ),
+          Icon(icon, size: 16, color: theme.colorScheme.onPrimaryContainer),
           const SizedBox(width: 8),
           Text(
             displayModeText,
@@ -701,55 +904,114 @@ class _DashboardPageState extends State<DashboardPage> with AutomaticKeepAliveCl
     );
   }
 
+  /// Builds expense category distribution pie chart for spending analysis.
+  ///
+  /// Displays proportional breakdown of expenses across different categories,
+  /// helping users identify major spending areas and budget optimization opportunities.
+  ///
+  /// Parameters:
+  /// - [data]: Dashboard data containing expense category distribution
+  ///
+  /// Returns:
+  /// - [Widget]: Pie chart with expense categories and amounts
   Widget _buildExpenseCategoryDistributionChart(DashboardData data) {
     final theme = Theme.of(context);
     return PieChart(
       data: data.expenseCategoryDistribution,
       title: 'Expense Breakdown',
-      borderColor: theme.colorScheme.error,
-      // backgroundColor: theme.colorScheme.error.withValues(alpha: 0.1),
+      borderColor: theme.colorScheme.error, // Red theme for expenses
     );
   }
 
+  /// Builds income category distribution pie chart for revenue source analysis.
+  ///
+  /// Displays proportional breakdown of income across different sources,
+  /// helping users understand revenue diversification and source reliability.
+  ///
+  /// Parameters:
+  /// - [data]: Dashboard data containing income category distribution
+  ///
+  /// Returns:
+  /// - [Widget]: Pie chart with income sources and amounts
   Widget _buildIncomeCategoryDistributionChart(DashboardData data) {
     final theme = Theme.of(context);
     return PieChart(
       data: data.incomeCategoryDistribution,
       title: 'Income Breakdown',
-      borderColor: theme.colorScheme.tertiary,
+      borderColor: theme.colorScheme.tertiary, // Green theme for income
     );
   }
 
+  /// Builds net revenue trend line chart showing financial health over time.
+  ///
+  /// Displays the overall financial performance by showing net revenue
+  /// (income minus expenses) trends, helping identify growth patterns.
+  ///
+  /// Parameters:
+  /// - [data]: Dashboard data containing revenue trend information
+  ///
+  /// Returns:
+  /// - [Widget]: Line chart showing revenue trends over selected period
   Widget _buildRevenueTrendChart(DashboardData data) {
     return CartesianLineChart(
       data: data.revenueTrendData,
       title: 'Revenue',
-      displayMode: data.displayMode,
+      displayMode: data.displayMode, // Daily or monthly aggregation
     );
   }
 
+  /// Builds income trend line chart for revenue pattern analysis.
+  ///
+  /// Displays income trends over time to help identify seasonal patterns,
+  /// growth trends, and revenue consistency for business planning.
+  ///
+  /// Parameters:
+  /// - [data]: Dashboard data containing income chart data
+  ///
+  /// Returns:
+  /// - [Widget]: Line chart with income trends in tertiary color theme
   Widget _buildIncomeTrendChart(DashboardData data) {
     return CartesianLineChart(
       data: data.incomeChartData,
       title: 'Income',
       displayMode: data.displayMode,
-      color: Theme.of(context).colorScheme.tertiary,
+      color: Theme.of(context).colorScheme.tertiary, // Green for income
     );
   }
 
+  /// Builds expense trend line chart for spending pattern analysis.
+  ///
+  /// Displays expense trends over time to help identify spending patterns,
+  /// budget adherence, and cost optimization opportunities.
+  ///
+  /// Parameters:
+  /// - [data]: Dashboard data containing expense chart data
+  ///
+  /// Returns:
+  /// - [Widget]: Line chart with expense trends in error color theme
   Widget _buildExpenseTrendChart(DashboardData data) {
     return CartesianLineChart(
       data: data.expenseChartData,
       title: 'Expense',
-      color: Theme.of(context).colorScheme.error,
+      color: Theme.of(context).colorScheme.error, // Red for expenses
       displayMode: data.displayMode,
     );
   }
 
+  /// Builds comparative bar chart showing income vs expense side by side.
+  ///
+  /// Provides direct visual comparison between income and expenses over time,
+  /// making it easy to identify periods of profit/loss and financial balance.
+  ///
+  /// Parameters:
+  /// - [data]: Dashboard data containing both income and expense chart data
+  ///
+  /// Returns:
+  /// - [Widget]: Bar chart with side-by-side income and expense comparison
   Widget _buildIncomeVsExpenseChart(DashboardData data) {
     return CartesianBarChart(
-      incomeData: data.incomeChartData,
-      expenseData: data.expenseChartData,
+      incomeData: data.incomeChartData, // Green bars for income
+      expenseData: data.expenseChartData, // Red bars for expenses
       title: 'Income vs Expense',
       displayMode: data.displayMode,
     );
