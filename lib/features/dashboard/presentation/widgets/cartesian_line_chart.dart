@@ -6,36 +6,63 @@ class CartesianLineChart extends StatelessWidget {
   final List<ChartData> data;
   final String title;
   final Color? color;
+  final List<ChartData>? predictionData;
 
   final ChartDisplayMode? displayMode;
 
-  const CartesianLineChart({super.key, required this.data, required this.title, this.color, this.displayMode});
+  const CartesianLineChart({
+    super.key,
+    required this.data,
+    required this.title,
+    this.color,
+    this.displayMode,
+    this.predictionData,
+  });
 
   @override
   Widget build(BuildContext context) {
-      // final displayModeText = displayMode == ChartDisplayMode.daily ? 'Daily' : 'Monthly';
-      return SfCartesianChart(
-        title: ChartTitle(text: '$title Trend', textStyle: TextStyle(color: color ?? Theme.of(context).colorScheme.primary)),
-        legend: const Legend(isVisible: true),
-        primaryXAxis: CategoryAxis(
-          labelRotation: displayMode == ChartDisplayMode.daily ? -45 : -90,
-          labelIntersectAction: AxisLabelIntersectAction.multipleRows,
+    // final displayModeText = displayMode == ChartDisplayMode.daily ? 'Daily' : 'Monthly';
+    return SfCartesianChart(
+      title: ChartTitle(
+        text: '$title Trend',
+        textStyle: TextStyle(
+          color: color ?? Theme.of(context).colorScheme.primary,
         ),
-        tooltipBehavior: TooltipBehavior(enable: true),
-        series: <CartesianSeries<ChartData, String>>[
+      ),
+      legend: const Legend(isVisible: true),
+      primaryXAxis: CategoryAxis(
+        labelRotation: displayMode == ChartDisplayMode.daily ? -45 : -90,
+        labelIntersectAction: AxisLabelIntersectAction.multipleRows,
+      ),
+      tooltipBehavior: TooltipBehavior(enable: true),
+      series: <CartesianSeries<ChartData, String>>[
+        LineSeries<ChartData, String>(
+          dataSource: data,
+          xValueMapper: (ChartData sales, _) => sales.key,
+          yValueMapper: (ChartData sales, _) => sales.value,
+          name: title,
+          color: color,
+          dataLabelSettings: DataLabelSettings(
+            isVisible: data.length <= 10,
+            labelAlignment: ChartDataLabelAlignment.auto,
+          ),
+          markerSettings: const MarkerSettings(isVisible: true),
+        ),
+        if (predictionData != null && predictionData!.isNotEmpty)
           LineSeries<ChartData, String>(
-            dataSource: data,
+            dataSource: predictionData!,
             xValueMapper: (ChartData sales, _) => sales.key,
             yValueMapper: (ChartData sales, _) => sales.value,
-            name: title,
-            color: color,
+            name: 'Predicted $title',
+            color: Colors.orange,
+            dashArray: const <double>[5, 5],
             dataLabelSettings: DataLabelSettings(
-              isVisible: data.length <= 10,
+              isVisible: predictionData!.length <= 10,
               labelAlignment: ChartDataLabelAlignment.auto,
             ),
             markerSettings: const MarkerSettings(isVisible: true),
           ),
-        ],
-      );
+      ],
+    );
   }
 }

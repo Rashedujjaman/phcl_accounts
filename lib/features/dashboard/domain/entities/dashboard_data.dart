@@ -7,6 +7,7 @@ class DashboardData {
   final List<ChartData> incomeCategoryDistribution;
   final List<ChartData> expenseCategoryDistribution;
   final List<ChartData> revenueTrendData;
+  final List<ChartData> revenuePredictionData;
   final ChartDisplayMode displayMode;
 
   DashboardData({
@@ -18,14 +19,12 @@ class DashboardData {
     required this.incomeCategoryDistribution,
     required this.expenseCategoryDistribution,
     required this.revenueTrendData,
+    required this.revenuePredictionData,
     required this.displayMode,
   });
 }
 
-enum ChartDisplayMode {
-  daily,
-  monthly,
-}
+enum ChartDisplayMode { daily, monthly }
 
 class ChartData {
   final String key;

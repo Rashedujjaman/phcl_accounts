@@ -435,19 +435,38 @@ class _DashboardPageState extends State<DashboardPage>
           const SizedBox(height: 16),
 
           // Financial trend charts with dividers for visual separation
-          _buildRevenueTrendChart(data), // Net revenue over time
-          const Divider(),
-          _buildIncomeTrendChart(data), // Income trend analysis
-          const Divider(),
-          _buildExpenseTrendChart(data), // Expense trend analysis
-          const Divider(),
-          _buildIncomeVsExpenseChart(data), // Comparative bar chart
-          const SizedBox(height: 20),
+          if (data.revenueTrendData.isNotEmpty) ...[
+            _buildRevenueTrendChart(data), // Net revenue over time
+            const Divider(),
+          ],
+          if (data.incomeChartData.isNotEmpty) ...[
+            _buildIncomeTrendChart(data), // Income trend analysis
+            const Divider(),
+          ],
+          if (data.expenseChartData.isNotEmpty) ...[
+            _buildExpenseTrendChart(data), // Expense trend analysis
+            const Divider(),
+          ],
+          if (data.incomeChartData.isNotEmpty &&
+              data.expenseChartData.isNotEmpty) ...[
+            _buildIncomeVsExpenseChart(data), // Comparative bar chart
+            const SizedBox(height: 20),
+          ],
 
           // Category distribution analysis
-          _buildExpenseCategoryDistributionChart(data), // Expense breakdown
-          const SizedBox(height: 20),
-          _buildIncomeCategoryDistributionChart(data), // Income sources
+          if (data.expenseCategoryDistribution.isNotEmpty) ...[
+            _buildExpenseCategoryDistributionChart(data), // Expense breakdown
+            const SizedBox(height: 20),
+          ],
+
+          if (data.incomeCategoryDistribution.isNotEmpty) ...[
+            _buildIncomeCategoryDistributionChart(data), // Income sources
+            const SizedBox(height: 20),
+          ],
+
+          // Revenue prediction chart
+          if (data.revenuePredictionData.isNotEmpty)
+            _buildRevenuePredictionChart(data), // Revenue predictions
         ],
       );
     }
@@ -1014,6 +1033,25 @@ class _DashboardPageState extends State<DashboardPage>
       expenseData: data.expenseChartData, // Red bars for expenses
       title: 'Income vs Expense',
       displayMode: data.displayMode,
+    );
+  }
+
+  /// Builds revenue prediction line chart using ML-driven forecasts.
+  ///
+  /// Displays predicted revenue trends based on historical data and ML models,
+  /// helping users visualize future financial performance.
+  ///
+  /// Parameters:
+  /// - [data]: Dashboard data containing revenue prediction information
+  ///
+  /// Returns:
+  /// - [Widget]: Line chart showing predicted revenue trends
+  Widget _buildRevenuePredictionChart(DashboardData data) {
+    return CartesianLineChart(
+      data: data.revenueTrendData,
+      title: 'Revenue Prediction',
+      displayMode: data.displayMode,
+      predictionData: data.revenuePredictionData,
     );
   }
 }
