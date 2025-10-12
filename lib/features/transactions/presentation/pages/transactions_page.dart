@@ -95,6 +95,9 @@ class _TransactionsPageState extends State<TransactionsPage> {
               ),
             ),
 
+            // Transaction Search Bar
+            // To Do: Implement search functionality later
+
             // Transaction Type Filter
             _buildTypeFilterChips(),
 
