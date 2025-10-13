@@ -19,11 +19,22 @@ class TransactionsPage extends StatefulWidget {
 class _TransactionsPageState extends State<TransactionsPage> {
   DateTimeRange? _dateRange;
   String? _selectedType;
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+  bool _isSearchVisible = false;
 
   @override
   void initState() {
     super.initState();
     _loadInitialTransactions();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
   }
 
   void _loadInitialTransactions() {
@@ -61,6 +72,46 @@ class _TransactionsPageState extends State<TransactionsPage> {
     }
   }
 
+  void _onSearchChanged() {
+    setState(() {
+      _searchQuery = _searchController.text.toLowerCase();
+    });
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearchVisible = !_isSearchVisible;
+      if (!_isSearchVisible) {
+        _searchController.clear();
+        _searchQuery = '';
+      }
+    });
+  }
+
+  /// Filters transactions based on search query
+  /// Searches across: category, amount, clientId, contactNo, note, transactBy fields
+  List<TransactionEntity> _filterTransactions(
+    List<TransactionEntity> transactions,
+  ) {
+    if (_searchQuery.isEmpty) {
+      return transactions;
+    }
+
+    return transactions.where((transaction) {
+      final searchFields = [
+        transaction.category.toLowerCase(),
+        transaction.amount.toString(),
+        transaction.clientId?.toLowerCase() ?? '',
+        transaction.contactNo?.toLowerCase() ?? '',
+        transaction.note?.toLowerCase() ?? '',
+        transaction.transactBy?.toLowerCase() ?? '',
+        DateFormat('MMM dd, yyyy').format(transaction.date).toLowerCase(),
+      ];
+
+      return searchFields.any((field) => field.contains(_searchQuery));
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -95,11 +146,11 @@ class _TransactionsPageState extends State<TransactionsPage> {
               ),
             ),
 
-            // Transaction Search Bar
-            // To Do: Implement search functionality later
-
             // Transaction Type Filter
             _buildTypeFilterChips(),
+
+            // Transaction Search Bar
+            _buildSearchBar(),
 
             // Transaction List
             Expanded(
@@ -112,54 +163,57 @@ class _TransactionsPageState extends State<TransactionsPage> {
                     return _buildErrorState(state.message);
                   }
                   if (state is TransactionLoaded) {
-                    final transactions = state.transactions.where((t) {
+                    // First apply type filter
+                    var transactions = state.transactions.where((t) {
                       if (state.currentType != null) {
                         return t.type == state.currentType;
                       }
                       return true;
                     }).toList();
 
+                    // Then apply search filter
+                    transactions = _filterTransactions(transactions);
+
                     if (transactions.isEmpty) {
                       return _buildEmptyState();
                     }
-                    return ListView.builder(
-                      physics: const AlwaysScrollableScrollPhysics(),
-                      padding: const EdgeInsets.all(16),
-                      itemCount: transactions.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: BlocBuilder<AuthBloc, AuthState>(
-                            builder: (context, authState) {
-                              final isAdmin =
-                                  authState is AuthAuthenticated &&
-                                  authState.user.role == 'admin';
 
-                              return TransactionItem(
-                                transaction: transactions[index],
-                                onTap: () => _showTransactionDetails(
-                                  context,
-                                  transactions[index],
+                    // Show search results count if searching
+                    if (_searchQuery.isNotEmpty) {
+                      return Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.search,
+                                  size: 16,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
                                 ),
-                                onDelete: isAdmin
-                                    ? () => _showDeleteConfirmDialog(
-                                        context,
-                                        transactions[index],
-                                      )
-                                    : null,
-                                onEdit: isAdmin
-                                    ? () => _editTransaction(
-                                        context,
-                                        transactions[index],
-                                      )
-                                    : null,
-                                showEditButton: isAdmin,
-                              );
-                            },
+                                const SizedBox(width: 8),
+                                Text(
+                                  '${transactions.length} result(s) for "${_searchController.text}"',
+                                  style: TextStyle(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onSurfaceVariant,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                        );
-                      },
-                    );
+                          Expanded(child: _buildTransactionList(transactions)),
+                        ],
+                      );
+                    }
+                    return _buildTransactionList(transactions);
                   }
                   return const SizedBox();
                 },
@@ -204,18 +258,20 @@ class _TransactionsPageState extends State<TransactionsPage> {
   }
 
   Widget _buildEmptyState() {
+    final bool isSearching = _searchQuery.isNotEmpty;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.receipt_long,
+            isSearching ? Icons.search_off : Icons.receipt_long,
             size: 64,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
           const SizedBox(height: 16),
           Text(
-            'No transactions found',
+            isSearching ? 'No results found' : 'No transactions found',
             style: TextStyle(
               fontSize: 18,
               color: Theme.of(context).colorScheme.onSurface,
@@ -224,12 +280,27 @@ class _TransactionsPageState extends State<TransactionsPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            'Add your first transaction to get started',
+            isSearching
+                ? 'Try adjusting your search terms'
+                : 'Add your first transaction to get started',
             style: TextStyle(
               fontSize: 14,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
             ),
           ),
+          if (isSearching) ...[
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: () {
+                _searchController.clear();
+                setState(() {
+                  _searchQuery = '';
+                });
+              },
+              icon: const Icon(Icons.clear),
+              label: const Text('Clear search'),
+            ),
+          ],
         ],
       ),
     );
@@ -280,6 +351,102 @@ class _TransactionsPageState extends State<TransactionsPage> {
         endDate: _dateRange?.end,
         type: _selectedType,
       ),
+    );
+  }
+
+  /// Builds the search bar widget with animation and search functionality
+  Widget _buildSearchBar() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      height: _isSearchVisible ? 60 : 0,
+      child: _isSearchVisible
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Theme.of(context).colorScheme.outlineVariant,
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              child: TextField(
+                controller: _searchController,
+                // autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Search By (category, amount, client, note...)',
+                  hintStyle: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  suffixIcon: _searchQuery.isNotEmpty
+                      ? IconButton(
+                          icon: const Icon(Icons.clear),
+                          onPressed: () {
+                            _searchController.clear();
+                          },
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: _toggleSearch,
+                        ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  filled: false,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                ),
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value.toLowerCase();
+                  });
+                },
+              ),
+            )
+          : const SizedBox(),
+    );
+  }
+
+  /// Builds the transaction list widget
+  Widget _buildTransactionList(List<TransactionEntity> transactions) {
+    return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(16),
+      itemCount: transactions.length,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, authState) {
+              final isAdmin =
+                  authState is AuthAuthenticated &&
+                  authState.user.role == 'admin';
+
+              return TransactionItem(
+                transaction: transactions[index],
+                onTap: () =>
+                    _showTransactionDetails(context, transactions[index]),
+                onDelete: isAdmin
+                    ? () =>
+                          _showDeleteConfirmDialog(context, transactions[index])
+                    : null,
+                onEdit: isAdmin
+                    ? () => _editTransaction(context, transactions[index])
+                    : null,
+                showEditButton: isAdmin,
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -344,6 +511,21 @@ class _TransactionsPageState extends State<TransactionsPage> {
                   horizontal: 12,
                   vertical: 4,
                 ),
+              ),
+              const Spacer(),
+              IconButton(
+                style: IconButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                ),
+                icon: Icon(
+                  _isSearchVisible ? Icons.search_off : Icons.search,
+                  // color: Theme.of(context).colorScheme.onSurface,
+                ),
+                onPressed: _toggleSearch,
+                tooltip: _isSearchVisible
+                    ? 'Hide search'
+                    : 'Search transactions',
               ),
             ],
           ),
