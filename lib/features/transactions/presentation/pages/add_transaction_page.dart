@@ -35,6 +35,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
   String? _selectedCategory;
   XFile? _attachment;
   String? _attachmentUrl;
+  String? _attachmentType;
   StreamSubscription? _uploadSubscription;
 
   @override
@@ -58,6 +59,7 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     _selectedDate = transaction.date;
     _selectedCategory = transaction.category;
     _attachmentUrl = transaction.attachmentUrl;
+    _attachmentType = transaction.attachmentType;
   }
 
   @override
@@ -298,10 +300,19 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
             ),
           ],
         ),
+        // Show new attachment preview if a new file is selected
         if (_attachment != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: _buildAttachmentPreview(),
+          ),
+        // Show existing attachment preview if editing and no new attachment selected
+        if (_attachment == null &&
+            _attachmentUrl != null &&
+            _attachmentUrl!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: _buildExistingAttachmentPreview(),
           ),
       ],
     );
@@ -331,7 +342,11 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
             return;
           }
           if (mounted) {
-            setState(() => _attachment = pickedImage);
+            setState(() {
+              _attachment = pickedImage;
+              _attachmentUrl =
+                  null; // Clear existing attachment URL when new file is picked
+            });
           }
         }
       } else {
@@ -356,7 +371,11 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
           }
 
           if (mounted) {
-            setState(() => _attachment = XFile(file.path!, name: file.name));
+            setState(() {
+              _attachment = XFile(file.path!, name: file.name);
+              _attachmentUrl =
+                  null; // Clear existing attachment URL when new file is picked
+            });
           }
         }
       }
@@ -496,6 +515,174 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
     );
   }
 
+  Widget _buildExistingAttachmentPreview() {
+    if (_attachmentUrl == null || _attachmentUrl!.isEmpty) {
+      return const SizedBox();
+    }
+
+    // // Extract file name from URL (get the last part after '/')
+    // final fileName = _attachmentUrl!.split('/').last;
+    // final fileNameLower = fileName.toLowerCase();
+
+    // Determine file type from extension
+    final isImage =
+        _attachmentType == 'jpg' ||
+        _attachmentType == 'jpeg' ||
+        _attachmentType == 'png' ||
+        _attachmentType == 'webp';
+    final isPdf = _attachmentType == 'pdf';
+    final isWord = _attachmentType == 'doc' || _attachmentType == 'docx';
+
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Row(
+          children: [
+            // Preview thumbnail or icon
+            if (isImage)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: Image.network(
+                  _attachmentUrl!,
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    // Show fallback icon if image fails to load
+                    return Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Icon(
+                        Icons.image,
+                        size: 32,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    );
+                  },
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Center(
+                        child: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              )
+            else
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Center(
+                  child: Icon(
+                    isPdf
+                        ? Icons.picture_as_pdf
+                        : isWord
+                        ? Icons.description
+                        : Icons.insert_drive_file,
+                    size: 32,
+                    color: isPdf
+                        ? Theme.of(context).colorScheme.error
+                        : isWord
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+
+            const SizedBox(width: 12),
+
+            // File info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Text(
+                  //   fileName,
+                  //   style: const TextStyle(fontWeight: FontWeight.w500),
+                  //   maxLines: 1,
+                  //   overflow: TextOverflow.ellipsis,
+                  // ),
+                  // const SizedBox(height: 4),
+                  Text(
+                    isImage
+                        ? 'Image'
+                        : isPdf
+                        ? 'PDF Document'
+                        : isWord
+                        ? 'Word Document'
+                        : 'File',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Existing attachment',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Delete button for existing attachment
+            IconButton(
+              style: IconButton.styleFrom(
+                backgroundColor: Theme.of(context).colorScheme.error,
+                foregroundColor: Theme.of(context).colorScheme.onError,
+              ),
+              icon: const Icon(Icons.delete_forever, size: 20),
+              onPressed: () {
+                if (mounted) {
+                  setState(() {
+                    _attachmentUrl = null;
+                  });
+                }
+              },
+              tooltip: 'Remove existing attachment',
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String? _getFileTypeFromUrl(String url) {
+    final fileName = url.split('/').last.toLowerCase();
+    if (fileName.contains('.')) {
+      return fileName.split('.').last;
+    }
+    return null;
+  }
+
   Widget _buildSubmitButton() {
     return ElevatedButton(
       onPressed: _submitForm,
@@ -578,11 +765,12 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
               ? _contactNoController.text
               : null,
           note: _noteController.text.isNotEmpty ? _noteController.text : null,
-          attachmentUrl:
-              _attachmentUrl ?? widget.existingTransaction?.attachmentUrl,
+          attachmentUrl: _attachmentUrl,
           attachmentType:
               _attachment?.name.split('.').last.toLowerCase() ??
-              widget.existingTransaction?.attachmentType,
+              (_attachmentUrl != null
+                  ? _getFileTypeFromUrl(_attachmentUrl!)
+                  : null),
         );
 
         // Add or update transaction

@@ -42,6 +42,7 @@
 /// @author PHCL Development Team
 /// @version 1.0.0
 /// @since 2024
+library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
