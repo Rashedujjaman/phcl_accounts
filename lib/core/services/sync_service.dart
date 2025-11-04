@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:phcl_accounts/core/database/local_database.dart';
 import 'package:phcl_accounts/core/services/connectivity_service.dart';
 import 'package:phcl_accounts/features/transactions/domain/entities/transaction_entity.dart';
@@ -56,19 +57,56 @@ class SyncService {
   ///
   /// Should be called once during app startup after user authentication.
   Future<void> initialize() async {
+    debugPrint('SyncService: Initializing sync service...');
+    debugPrint(
+      'SyncService: Connectivity service instance: $_connectivityService',
+    );
+
     // Listen for connectivity changes
-    _connectivitySubscription = _connectivityService.connectionStream.listen((
-      isOnline,
-    ) {
-      if (isOnline) {
-        // Trigger sync when coming online
-        syncPendingTransactions();
-      }
-    });
+    debugPrint('SyncService: Setting up connectivity stream listener...');
+    _connectivitySubscription = _connectivityService.connectionStream.listen(
+      (isOnline) {
+        debugPrint('SyncService: ========================================');
+        debugPrint('SyncService: 🔔 CONNECTIVITY CALLBACK TRIGGERED!');
+        debugPrint('SyncService: Connectivity changed - isOnline: $isOnline');
+        debugPrint('SyncService: ========================================');
+
+        if (isOnline) {
+          debugPrint('SyncService: Connection restored - Triggering sync...');
+          // Trigger sync when coming online
+          syncPendingTransactions();
+        } else {
+          debugPrint(
+            'SyncService: Connection lost - Waiting for reconnection...',
+          );
+        }
+      },
+      onError: (error) {
+        debugPrint('SyncService: ❌ ERROR in connectivity stream: $error');
+      },
+      onDone: () {
+        debugPrint('SyncService: ⚠️ Connectivity stream closed!');
+      },
+    );
+
+    debugPrint('SyncService: Stream listener setup complete');
+    debugPrint(
+      'SyncService: Subscription active: ${_connectivitySubscription != null}',
+    );
 
     // Perform initial sync if online
-    if (_connectivityService.isConnected) {
+    final initiallyOnline = _connectivityService.isConnected;
+    debugPrint(
+      'SyncService: Initial connectivity check - isConnected: $initiallyOnline',
+    );
+
+    if (initiallyOnline) {
+      debugPrint('SyncService: Device is online - Starting initial sync...');
       syncPendingTransactions();
+    } else {
+      debugPrint(
+        'SyncService: Device is offline - Sync will trigger when connection available',
+      );
     }
   }
 
@@ -83,7 +121,7 @@ class SyncService {
   ///
   /// Returns the number of successfully synced transactions.
   Future<int> syncPendingTransactions() async {
-    print('SyncService: Starting sync process');
+    debugPrint('SyncService: Starting sync process');
     if (_isSyncing) {
       return 0; // Already syncing, skip
     }
@@ -115,7 +153,7 @@ class SyncService {
       }
 
       _syncStatusController.add(SyncStatus.inProgress(0, pendingMaps.length));
-      print(
+      debugPrint(
         'SyncService: Found ${pendingMaps.length} pending transactions to sync',
       );
 
@@ -173,14 +211,13 @@ class SyncService {
       }
 
       _syncStatusController.add(SyncStatus.completed(syncedCount, failedCount));
-      print('SyncService: Sync process completed');
+      debugPrint('SyncService: Sync process completed');
     } catch (e) {
       _syncStatusController.add(SyncStatus.error(e.toString()));
-      print('SyncService: Sync process failed: $e');
+      debugPrint('SyncService: Sync process failed: $e');
     } finally {
       _isSyncing = false;
     }
-
     return syncedCount;
   }
 

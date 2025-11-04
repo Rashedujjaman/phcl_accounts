@@ -154,6 +154,7 @@ class MyApp extends StatelessWidget {
                   syncService.initialize();
                   return syncService;
                 },
+                lazy: false, // Force immediate creation
               ),
             ],
             child: MultiBlocProvider(
