@@ -68,6 +68,7 @@ dependencies:
   ml_dataframe: ^1.4.1
   sqflite: ^2.4.1
   connectivity_plus: ^6.1.1
+  path: ^1.9.0
 
 dev_dependencies:
   flutter_test:

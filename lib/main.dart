@@ -14,6 +14,10 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:phcl_accounts/core/services/connectivity_service.dart';
+import 'package:phcl_accounts/core/services/sync_service.dart';
+import 'package:phcl_accounts/features/transactions/data/repositories/offline_first_transaction_repository.dart';
+import 'package:phcl_accounts/features/transactions/data/repositories/offline_transaction_repository.dart';
 import 'package:provider/provider.dart';
 import 'package:phcl_accounts/core/theme/app_themes.dart';
 import 'package:phcl_accounts/core/theme/theme_provider.dart';
@@ -38,7 +42,7 @@ import 'package:phcl_accounts/features/transactions/domain/repositories/transact
 import 'package:phcl_accounts/features/transactions/presentation/bloc/transaction_bloc.dart';
 
 /// Main entry point for PHCL Accounts app.
-/// Initializes Flutter bindings, Firebase, and theme provider before launching the app.
+/// Initializes Flutter bindings, Firebase, theme provider, and offline services.
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
@@ -47,16 +51,30 @@ void main() async {
   final themeProvider = ThemeProvider();
   await themeProvider.initialize();
 
-  runApp(MyApp(themeProvider: themeProvider));
+  // Initialize ConnectivityService for network monitoring
+  final connectivityService = ConnectivityService();
+  await connectivityService.initialize();
+
+  runApp(
+    MyApp(
+      themeProvider: themeProvider,
+      connectivityService: connectivityService,
+    ),
+  );
 }
 
 /// Root widget for the application.
 /// Sets up dependency injection (RepositoryProvider), state management (BlocProvider),
-/// and theme management (ChangeNotifierProvider).
+/// theme management (ChangeNotifierProvider), and offline services.
 class MyApp extends StatelessWidget {
   final ThemeProvider themeProvider;
+  final ConnectivityService connectivityService;
 
-  const MyApp({super.key, required this.themeProvider});
+  const MyApp({
+    super.key,
+    required this.themeProvider,
+    required this.connectivityService,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -66,28 +84,76 @@ class MyApp extends StatelessWidget {
         builder: (context, themeProvider, child) {
           return MultiRepositoryProvider(
             providers: [
+              // Firebase instances
+              RepositoryProvider<FirebaseAuth>(
+                create: (context) => FirebaseAuth.instance,
+              ),
+              RepositoryProvider<FirebaseFirestore>(
+                create: (context) => FirebaseFirestore.instance,
+              ),
+              RepositoryProvider<FirebaseStorage>(
+                create: (context) => FirebaseStorage.instance,
+              ),
+
+              // Connectivity Service for network monitoring
+              RepositoryProvider<ConnectivityService>.value(
+                value: connectivityService,
+              ),
+
               // AuthRepositoryImpl: Handles authentication and user profile operations.
               RepositoryProvider<AuthRepositoryImpl>(
                 create: (context) => AuthRepositoryImpl(
-                  firebaseAuth: FirebaseAuth.instance,
-                  firestore: FirebaseFirestore.instance,
-                  storage: FirebaseStorage.instance
+                  firebaseAuth: context.read<FirebaseAuth>(),
+                  firestore: context.read<FirebaseFirestore>(),
+                  storage: context.read<FirebaseStorage>(),
                 ),
               ),
+
               // DashboardRepository: Handles analytics and dashboard data.
               RepositoryProvider<DashboardRepository>(
                 create: (context) => DashboardRepositoryImpl(
-                  auth: FirebaseAuth.instance,
-                  firestore: FirebaseFirestore.instance,
+                  auth: context.read<FirebaseAuth>(),
+                  firestore: context.read<FirebaseFirestore>(),
                 ),
               ),
-              // TransactionRepository: Handles CRUD operations for financial transactions.
-              RepositoryProvider<TransactionRepository>(
+
+              // TransactionRepositoryImpl: Firebase implementation
+              RepositoryProvider<TransactionRepositoryImpl>(
                 create: (context) => TransactionRepositoryImpl(
-                  firestore: FirebaseFirestore.instance,
-                  storage: FirebaseStorage.instance,
-                  auth: FirebaseAuth.instance,
+                  firestore: context.read<FirebaseFirestore>(),
+                  storage: context.read<FirebaseStorage>(),
+                  auth: context.read<FirebaseAuth>(),
                 ),
+              ),
+
+              // OfflineTransactionRepository: Local database operations
+              RepositoryProvider<OfflineTransactionRepository>(
+                create: (context) => OfflineTransactionRepository(),
+              ),
+
+              // TransactionRepository: Offline-first wrapper (main interface)
+              RepositoryProvider<TransactionRepository>(
+                create: (context) => OfflineFirstTransactionRepository(
+                  remoteRepository: context.read<TransactionRepositoryImpl>(),
+                  offlineRepository: context
+                      .read<OfflineTransactionRepository>(),
+                  connectivityService: context.read<ConnectivityService>(),
+                  auth: context.read<FirebaseAuth>(),
+                ),
+              ),
+
+              // SyncService: Automatic synchronization when online
+              RepositoryProvider<SyncService>(
+                create: (context) {
+                  final syncService = SyncService(
+                    transactionRepository: context
+                        .read<TransactionRepositoryImpl>(),
+                    connectivityService: context.read<ConnectivityService>(),
+                  );
+                  // Initialize sync service to start monitoring
+                  syncService.initialize();
+                  return syncService;
+                },
               ),
             ],
             child: MultiBlocProvider(
@@ -98,8 +164,12 @@ class MyApp extends StatelessWidget {
                     signIn: SignIn(context.read<AuthRepositoryImpl>()),
                     signUp: SignUp(context.read<AuthRepositoryImpl>()),
                     signOut: SignOut(context.read<AuthRepositoryImpl>()),
-                    getCurrentUser: GetCurrentUser(context.read<AuthRepositoryImpl>()),
-                    updateUserProfile: UpdateUserProfile(context.read<AuthRepositoryImpl>()),
+                    getCurrentUser: GetCurrentUser(
+                      context.read<AuthRepositoryImpl>(),
+                    ),
+                    updateUserProfile: UpdateUserProfile(
+                      context.read<AuthRepositoryImpl>(),
+                    ),
                   )..add(CheckAuthStatusEvent()),
                 ),
                 // DashboardBloc: Manages dashboard analytics and chart data.

@@ -8,18 +8,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:phcl_accounts/core/theme/theme_provider.dart';
+import 'package:phcl_accounts/core/services/connectivity_service.dart';
 
 import 'package:phcl_accounts/main.dart';
 
 void main() {
   testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-
     // Initialize theme provider
     final themeProvider = ThemeProvider();
     await themeProvider.initialize();
 
+    // Initialize connectivity service
+    final connectivityService = ConnectivityService();
+    await connectivityService.initialize();
+
     // Build our app and trigger a frame.
-    await tester.pumpWidget(MyApp(themeProvider: themeProvider));
+    await tester.pumpWidget(
+      MyApp(
+        themeProvider: themeProvider,
+        connectivityService: connectivityService,
+      ),
+    );
 
     // Verify that our counter starts at 0.
     expect(find.text('0'), findsOneWidget);

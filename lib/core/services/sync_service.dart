@@ -83,6 +83,7 @@ class SyncService {
   ///
   /// Returns the number of successfully synced transactions.
   Future<int> syncPendingTransactions() async {
+    print('SyncService: Starting sync process');
     if (_isSyncing) {
       return 0; // Already syncing, skip
     }
@@ -114,6 +115,9 @@ class SyncService {
       }
 
       _syncStatusController.add(SyncStatus.inProgress(0, pendingMaps.length));
+      print(
+        'SyncService: Found ${pendingMaps.length} pending transactions to sync',
+      );
 
       // Sync each transaction
       for (final map in pendingMaps) {
@@ -169,8 +173,10 @@ class SyncService {
       }
 
       _syncStatusController.add(SyncStatus.completed(syncedCount, failedCount));
+      print('SyncService: Sync process completed');
     } catch (e) {
       _syncStatusController.add(SyncStatus.error(e.toString()));
+      print('SyncService: Sync process failed: $e');
     } finally {
       _isSyncing = false;
     }

@@ -43,7 +43,7 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     RestoreTransactionsState event,
     Emitter<TransactionState> emit,
   ) async {
-    emit (event.state);
+    emit(event.state);
   }
 
   Future<void> _onAddTransaction(
@@ -54,12 +54,8 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
       await _repository.addTransaction(event.transaction);
 
       emit(TransactionSuccess('Transaction added successfully'));
-      
-      add(LoadTransactions(
-        startDate: event.startDate,
-        endDate: event.endDate,
-      ));
 
+      add(LoadTransactions(startDate: event.startDate, endDate: event.endDate));
     } catch (e) {
       emit(TransactionError(e.toString()));
     }
@@ -85,11 +81,13 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     try {
       await _repository.updateTransaction(event.transaction);
       emit(TransactionSuccess('Transaction updated successfully'));
-      add(LoadTransactions(
-        startDate: event.startDate,
-        endDate: event.endDate,
-        type: event.transaction.type,
-      ));
+      add(
+        LoadTransactions(
+          startDate: event.startDate,
+          endDate: event.endDate,
+          type: event.transaction.type,
+        ),
+      );
     } catch (e) {
       emit(TransactionError(e.toString()));
     }
@@ -102,11 +100,13 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     try {
       await _repository.deleteTransaction(event.id);
       emit(TransactionSuccess('Transaction deleted successfully'));
-      add(LoadTransactions(
-        startDate: event.startDate,
-        endDate: event.endDate,
-        type: event.type,
-      ));
+      add(
+        LoadTransactions(
+          startDate: event.startDate,
+          endDate: event.endDate,
+          type: event.type,
+        ),
+      );
     } catch (e) {
       emit(TransactionError(e.toString()));
     }
@@ -117,14 +117,14 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     Emitter<TransactionState> emit,
   ) async {
     emit(AttachmentUploading(0));
-    
+
     try {
       final file = File(event.file.path);
       final type = event.transactionType;
-      
+
       // Get the download URL
       final result = await _repository.uploadAttachment(file, type);
-      
+
       emit(AttachmentUploadSuccess(result['url']!));
       add(AttachmentUploaded(result['url']!));
     } catch (e) {
@@ -136,6 +136,10 @@ class TransactionBloc extends Bloc<TransactionEvent, TransactionState> {
     AttachmentUploaded event,
     Emitter<TransactionState> emit,
   ) async {
-    emit(TransactionSuccess('Attachment uploaded successfully: ${event.downloadUrl}'));
+    emit(
+      TransactionSuccess(
+        'Attachment uploaded successfully: ${event.downloadUrl}',
+      ),
+    );
   }
 }

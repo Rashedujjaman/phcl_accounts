@@ -838,9 +838,9 @@ class _AddTransactionPageState extends State<AddTransactionPage> {
       return await completer.future;
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to upload attachment: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
       return null;
     }

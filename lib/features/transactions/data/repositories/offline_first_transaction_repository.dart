@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:phcl_accounts/core/services/connectivity_service.dart';
 import 'package:phcl_accounts/features/transactions/data/repositories/offline_transaction_repository.dart';
@@ -161,11 +160,17 @@ class OfflineFirstTransactionRepository implements TransactionRepository {
 
   @override
   Future<List<String>> getCategories({required String type}) async {
-    // Categories can be cached or use default list when offline
-    try {
-      return await _remoteRepository.getCategories(type: type);
-    } catch (e) {
-      // Return default categories if offline
+    final isOnline = await _connectivityService.checkConnection();
+    if (isOnline) {
+      // Categories can be cached or use default list when offline
+      try {
+        final categories = await _remoteRepository.getCategories(type: type);
+        return categories;
+      } catch (e) {
+        // Return default categories if offline
+        return _getDefaultCategories(type);
+      }
+    } else {
       return _getDefaultCategories(type);
     }
   }
@@ -173,7 +178,7 @@ class OfflineFirstTransactionRepository implements TransactionRepository {
   /// Returns default categories when offline.
   List<String> _getDefaultCategories(String type) {
     if (type == 'income') {
-      return ['Sales', 'Services', 'Investment', 'Other Income'];
+      return ['Plot/Land Sale'];
     } else {
       return [
         'Rent',
