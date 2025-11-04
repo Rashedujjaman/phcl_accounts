@@ -1,8 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:pdfx/pdfx.dart';
 // import 'package:url_launcher/url_launcher.dart';
-import 'package:flutter/services.dart' ;
+import 'package:flutter/services.dart';
 // import 'package:file_saver/file_saver.dart';
 // import 'package:open_filex/open_filex.dart';
 
@@ -11,7 +12,12 @@ class AttachmentViewer extends StatefulWidget {
   final String? fileName;
   final String? fileType;
 
-  const AttachmentViewer({super.key, required this.url, this.fileName, required this.fileType});
+  const AttachmentViewer({
+    super.key,
+    required this.url,
+    this.fileName,
+    required this.fileType,
+  });
 
   @override
   State<AttachmentViewer> createState() => _AttachmentViewerState();
@@ -19,6 +25,7 @@ class AttachmentViewer extends StatefulWidget {
 
 class _AttachmentViewerState extends State<AttachmentViewer> {
   bool _isPdf = false;
+  bool _isLocalFile = false;
 
   // bool _isDownloading = false;
 
@@ -26,6 +33,8 @@ class _AttachmentViewerState extends State<AttachmentViewer> {
   void initState() {
     super.initState();
     _isPdf = widget.fileType!.toLowerCase() == 'pdf';
+    // Check if URL is a local file path (starts with /)
+    _isLocalFile = widget.url.startsWith('/');
   }
 
   // Future<void> _downloadAndOpenFile() async {
@@ -72,23 +81,29 @@ class _AttachmentViewerState extends State<AttachmentViewer> {
             // ],
           ),
           body: _isPdf
-              ? PdfViewPinch(
-                  controller: PdfControllerPinch(
-                    document: PdfDocument.openData(
-                      NetworkAssetBundle(
-                        Uri.parse(widget.url))
-                        .load(widget.url)
-                        .then((data) => data.buffer.asUint8List()
-                      ),
-                    ),
-                  ),
-                )
+              ? _isLocalFile
+                    ? PdfViewPinch(
+                        controller: PdfControllerPinch(
+                          document: PdfDocument.openFile(widget.url),
+                        ),
+                      )
+                    : PdfViewPinch(
+                        controller: PdfControllerPinch(
+                          document: PdfDocument.openData(
+                            NetworkAssetBundle(Uri.parse(widget.url))
+                                .load(widget.url)
+                                .then((data) => data.buffer.asUint8List()),
+                          ),
+                        ),
+                      )
               : InteractiveViewer(
                   child: Center(
-                    child: CachedNetworkImage(
-                      imageUrl: widget.url,
-                      fit: BoxFit.contain,
-                    ),
+                    child: _isLocalFile
+                        ? Image.file(File(widget.url), fit: BoxFit.contain)
+                        : CachedNetworkImage(
+                            imageUrl: widget.url,
+                            fit: BoxFit.contain,
+                          ),
                   ),
                 ),
         ),
@@ -103,30 +118,106 @@ class _AttachmentViewerState extends State<AttachmentViewer> {
       children: [
         GestureDetector(
           onTap: _showFullScreen,
-          child:  _isPdf
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Icon(Icons.picture_as_pdf, size: 48, color: Theme.of(context).colorScheme.error),
-                      const SizedBox(height: 8),
-                      const Text('PDF Document'),
-                    ],
-                  )
-                : ClipRRect(
+          child: _isPdf
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Icon(
+                      Icons.picture_as_pdf,
+                      size: 48,
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _isLocalFile ? 'PDF Document (Offline)' : 'PDF Document',
+                    ),
+                  ],
+                )
+              : ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: CachedNetworkImage(
-                    width: 100,
-                    imageUrl: widget.url,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => const Center(child: CircularProgressIndicator(
-                      padding: EdgeInsets.all(16),
-                    )),
-                    errorWidget: (context, url, error) => const Icon(Icons.error),
-                  ),
-                  ),
-          ),
-  
+                  child: _isLocalFile
+                      ? Image.file(
+                          File(widget.url),
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              width: 100,
+                              height: 100,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.error_outline,
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'File not found',
+                                    style: TextStyle(fontSize: 10),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        )
+                      : CachedNetworkImage(
+                          width: 100,
+                          height: 100,
+                          imageUrl: widget.url,
+                          fit: BoxFit.cover,
+                          placeholder: (context, url) => const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16),
+                              child: CircularProgressIndicator(),
+                            ),
+                          ),
+                          errorWidget: (context, url, error) => Container(
+                            width: 100,
+                            height: 100,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                            child: Icon(
+                              Icons.error,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                        ),
+                ),
+        ),
         const SizedBox(height: 8),
+        if (_isLocalFile)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.secondaryContainer,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.cloud_upload,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.onSecondaryContainer,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Pending sync',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
         // Row(
         //   mainAxisAlignment: MainAxisAlignment.center,
         //   children: [

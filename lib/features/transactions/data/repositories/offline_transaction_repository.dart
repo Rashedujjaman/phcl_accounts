@@ -25,10 +25,14 @@ class OfflineTransactionRepository {
   ///
   /// Parameters:
   /// - [transaction]: The transaction entity to save locally
+  /// - [attachmentLocalPath]: Optional local path to attachment file
   ///
   /// Returns:
   /// - String: Unique local ID for tracking the transaction
-  Future<String> savePendingTransaction(TransactionEntity transaction) async {
+  Future<String> savePendingTransaction(
+    TransactionEntity transaction, {
+    String? attachmentLocalPath,
+  }) async {
     final db = await LocalDatabase.database;
     final localId = _uuid.v4();
 
@@ -43,6 +47,7 @@ class OfflineTransactionRepository {
       'note': transaction.note,
       'attachment_url': transaction.attachmentUrl,
       'attachment_type': transaction.attachmentType,
+      'attachment_local_path': attachmentLocalPath, // Store local path
       'transact_by': transaction.transactBy,
       'created_by': transaction.createdBy,
       'created_at':

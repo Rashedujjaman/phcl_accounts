@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:phcl_accounts/core/database/local_database.dart';
 import 'package:phcl_accounts/core/services/connectivity_service.dart';
@@ -161,6 +162,7 @@ class SyncService {
       for (final map in pendingMaps) {
         try {
           final localId = map['local_id'] as String;
+          final attachmentLocalPath = map['attachment_local_path'] as String?;
 
           // Update status to 'syncing'
           await db.update(
@@ -174,9 +176,70 @@ class SyncService {
           );
 
           // Create transaction entity from local data
-          final transaction = _transactionFromMap(map);
+          var transaction = _transactionFromMap(map);
 
-          // Upload to Firebase
+          // If there's a local attachment, upload it first
+          if (attachmentLocalPath != null && attachmentLocalPath.isNotEmpty) {
+            try {
+              debugPrint(
+                'SyncService: Uploading attachment from: $attachmentLocalPath',
+              );
+
+              final attachmentFile = File(attachmentLocalPath);
+              if (await attachmentFile.exists()) {
+                // Upload attachment to Firebase
+                final uploadResult = await _transactionRepository
+                    .uploadAttachment(
+                      attachmentFile,
+                      transaction.attachmentType ?? 'other',
+                    );
+
+                // Update transaction with Firebase URL
+                transaction = TransactionEntity(
+                  type: transaction.type,
+                  category: transaction.category,
+                  date: transaction.date,
+                  amount: transaction.amount,
+                  clientId: transaction.clientId,
+                  contactNo: transaction.contactNo,
+                  note: transaction.note,
+                  attachmentUrl: uploadResult['url'], // Firebase URL
+                  attachmentType: uploadResult['type'],
+                  transactBy: transaction.transactBy,
+                  createdBy: transaction.createdBy,
+                  createdAt: transaction.createdAt,
+                  isDeleted: false,
+                  updatedBy: '',
+                  deletedBy: '',
+                  updatedAt: DateTime.now(),
+                );
+
+                debugPrint(
+                  'SyncService: Attachment uploaded successfully: ${uploadResult['url']}',
+                );
+
+                // Delete local attachment file after successful upload
+                try {
+                  await attachmentFile.delete();
+                  debugPrint('SyncService: Local attachment file deleted');
+                } catch (e) {
+                  debugPrint(
+                    'SyncService: Warning - Could not delete local attachment: $e',
+                  );
+                }
+              } else {
+                debugPrint(
+                  'SyncService: Warning - Local attachment file not found: $attachmentLocalPath',
+                );
+              }
+            } catch (e) {
+              debugPrint('SyncService: Failed to upload attachment: $e');
+              // Continue with transaction sync even if attachment fails
+              // The transaction will still have the local path which might fail validation
+            }
+          }
+
+          // Upload transaction to Firebase
           await _transactionRepository.addTransaction(transaction);
 
           // Mark as synced and delete from local DB

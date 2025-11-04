@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:phcl_accounts/core/services/connectivity_service.dart';
 import 'package:phcl_accounts/features/transactions/data/repositories/offline_transaction_repository.dart';
 import 'package:phcl_accounts/features/transactions/data/repositories/transaction_repository_impl.dart';
@@ -65,16 +66,42 @@ class OfflineFirstTransactionRepository implements TransactionRepository {
 
     if (isOnline) {
       try {
+        print('OfflineFirstRepo: Online - Attempting to save to Firebase...');
         // Try to add directly to Firebase
         await _remoteRepository.addTransaction(newTransaction);
+        print('OfflineFirstRepo: Successfully saved to Firebase');
       } catch (e) {
+        print(
+          'OfflineFirstRepo: Firebase save failed - Saving locally. Error: $e',
+        );
         // If Firebase fails, save locally for later sync
-        await _offlineRepository.savePendingTransaction(newTransaction);
+        // Extract local path if attachment URL is a local file path
+        String? localPath;
+        if (newTransaction.attachmentUrl != null &&
+            newTransaction.attachmentUrl!.startsWith('/')) {
+          localPath = newTransaction.attachmentUrl;
+        }
+        await _offlineRepository.savePendingTransaction(
+          newTransaction,
+          attachmentLocalPath: localPath,
+        );
         rethrow;
       }
     } else {
+      print('OfflineFirstRepo: Offline - Saving to local database');
+      // Extract local path if attachment URL is a local file path
+      String? localPath;
+      if (newTransaction.attachmentUrl != null &&
+          newTransaction.attachmentUrl!.startsWith('/')) {
+        localPath = newTransaction.attachmentUrl;
+      }
+
       // Save locally when offline
-      await _offlineRepository.savePendingTransaction(newTransaction);
+      await _offlineRepository.savePendingTransaction(
+        newTransaction,
+        attachmentLocalPath: localPath,
+      );
+      print('OfflineFirstRepo: Successfully saved to local DB');
       // Don't throw error - transaction saved locally
     }
   }
@@ -181,27 +208,102 @@ class OfflineFirstTransactionRepository implements TransactionRepository {
       return ['Plot/Land Sale'];
     } else {
       return [
-        'Rent',
-        'Utilities',
-        'Salaries',
-        'Supplies',
-        'Marketing',
-        'Transportation',
-        'Other Expense',
+        'Advertisement & Publicity (Facebook Boosting & Other\'s)',
+        'Cleaner Bill Monthly',
+        'Company Brochure Making Exp.',
+        'Conveyance Bill\'s',
+        'Entertainment (Client & Management Gust)',
+        'Festival (Eid) Tips exp',
+        'Internet Bill',
+        'Lunch Bill',
+        'Monthly Mobile Bill',
+        'Monthly Rent Car Bill',
+        'Monthly Staff Salary',
+        'Newspaper Bill',
+        'Office Electricity Bill Monthly',
+        'Office Other\'s/Miscellaneous Exp',
+        'Office Rent Monthly',
+        'Office Service Charge Monthly',
+        'Office Stationery Expence.',
+        'Project Purpose Payment To (Mr.Sharif)',
+        'Project visit Rent Car Bill',
+        'Promotional Leaflet Exp.',
+        'Remuneration',
+        'Repair & Maintenance expence',
+        'SMS Marketing Purpose Exp',
+        'Sales Incentive\'s',
+        'Staff ID Card Visiting Card Expence',
+        'Wages Pay Exp.',
+        'Water Bill\'s Exp.',
       ];
     }
   }
 
   @override
   Future<Map<String, String>> uploadAttachment(File file, String type) async {
-    // Attachments require online connection
+    // Check connectivity
     final isOnline = await _connectivityService.checkConnection();
 
-    if (!isOnline) {
-      throw Exception('File upload requires internet connection');
+    if (isOnline) {
+      // Upload directly to Firebase when online
+      try {
+        print('OfflineFirstRepo: Online - Uploading attachment to Firebase...');
+        final result = await _remoteRepository.uploadAttachment(file, type);
+        print('OfflineFirstRepo: Attachment uploaded successfully');
+        return result;
+      } catch (e) {
+        print('OfflineFirstRepo: Firebase upload failed - $e');
+        // If upload fails, save locally for later sync
+        return await _saveAttachmentLocally(file, type);
+      }
+    } else {
+      // Save locally when offline
+      print('OfflineFirstRepo: Offline - Saving attachment locally...');
+      return await _saveAttachmentLocally(file, type);
     }
+  }
 
-    return await _remoteRepository.uploadAttachment(file, type);
+  /// Saves attachment file to local storage for later upload.
+  ///
+  /// Creates a local copy of the file in the app's documents directory.
+  /// Returns a map with:
+  /// - 'url': Local file path (to be replaced with Firebase URL after sync)
+  /// - 'type': File type (image, pdf, etc.)
+  ///
+  /// The file will be uploaded to Firebase during sync.
+  Future<Map<String, String>> _saveAttachmentLocally(
+    File file,
+    String type,
+  ) async {
+    try {
+      // Get app's documents directory
+      final appDir = await getApplicationDocumentsDirectory();
+      final attachmentsDir = Directory('${appDir.path}/offline_attachments');
+
+      // Create directory if it doesn't exist
+      if (!await attachmentsDir.exists()) {
+        await attachmentsDir.create(recursive: true);
+      }
+
+      // Generate unique filename
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final extension = file.path.split('.').last;
+      final fileName = 'attachment_${timestamp}.$extension';
+      final localPath = '${attachmentsDir.path}/$fileName';
+
+      // Copy file to local storage
+      final localFile = await file.copy(localPath);
+
+      print('OfflineFirstRepo: Attachment saved locally at: $localPath');
+
+      return {
+        'url': localFile.path, // Local path, will be replaced after sync
+        'type': type,
+      };
+    } catch (e) {
+      print('OfflineFirstRepo: Error saving attachment locally - $e');
+      throw Exception('Failed to save attachment locally: $e');
+    }
   }
 
   @override
