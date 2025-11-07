@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:phcl_accounts/core/services/connectivity_service.dart';
@@ -66,12 +67,14 @@ class OfflineFirstTransactionRepository implements TransactionRepository {
 
     if (isOnline) {
       try {
-        print('OfflineFirstRepo: Online - Attempting to save to Firebase...');
+        debugPrint(
+          'OfflineFirstRepo: Online - Attempting to save to Firebase...',
+        );
         // Try to add directly to Firebase
         await _remoteRepository.addTransaction(newTransaction);
-        print('OfflineFirstRepo: Successfully saved to Firebase');
+        debugPrint('OfflineFirstRepo: Successfully saved to Firebase');
       } catch (e) {
-        print(
+        debugPrint(
           'OfflineFirstRepo: Firebase save failed - Saving locally. Error: $e',
         );
         // If Firebase fails, save locally for later sync
@@ -88,7 +91,7 @@ class OfflineFirstTransactionRepository implements TransactionRepository {
         rethrow;
       }
     } else {
-      print('OfflineFirstRepo: Offline - Saving to local database');
+      debugPrint('OfflineFirstRepo: Offline - Saving to local database');
       // Extract local path if attachment URL is a local file path
       String? localPath;
       if (newTransaction.attachmentUrl != null &&
@@ -101,7 +104,7 @@ class OfflineFirstTransactionRepository implements TransactionRepository {
         newTransaction,
         attachmentLocalPath: localPath,
       );
-      print('OfflineFirstRepo: Successfully saved to local DB');
+      debugPrint('OfflineFirstRepo: Successfully saved to local DB');
       // Don't throw error - transaction saved locally
     }
   }
@@ -247,18 +250,20 @@ class OfflineFirstTransactionRepository implements TransactionRepository {
     if (isOnline) {
       // Upload directly to Firebase when online
       try {
-        print('OfflineFirstRepo: Online - Uploading attachment to Firebase...');
+        debugPrint(
+          'OfflineFirstRepo: Online - Uploading attachment to Firebase...',
+        );
         final result = await _remoteRepository.uploadAttachment(file, type);
-        print('OfflineFirstRepo: Attachment uploaded successfully');
+        debugPrint('OfflineFirstRepo: Attachment uploaded successfully');
         return result;
       } catch (e) {
-        print('OfflineFirstRepo: Firebase upload failed - $e');
+        debugPrint('OfflineFirstRepo: Firebase upload failed - $e');
         // If upload fails, save locally for later sync
         return await _saveAttachmentLocally(file, type);
       }
     } else {
       // Save locally when offline
-      print('OfflineFirstRepo: Offline - Saving attachment locally...');
+      debugPrint('OfflineFirstRepo: Offline - Saving attachment locally...');
       return await _saveAttachmentLocally(file, type);
     }
   }
@@ -288,20 +293,20 @@ class OfflineFirstTransactionRepository implements TransactionRepository {
       // Generate unique filename
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       final extension = file.path.split('.').last;
-      final fileName = 'attachment_${timestamp}.$extension';
+      final fileName = 'attachment_$timestamp.$extension';
       final localPath = '${attachmentsDir.path}/$fileName';
 
       // Copy file to local storage
       final localFile = await file.copy(localPath);
 
-      print('OfflineFirstRepo: Attachment saved locally at: $localPath');
+      debugPrint('OfflineFirstRepo: Attachment saved locally at: $localPath');
 
       return {
         'url': localFile.path, // Local path, will be replaced after sync
         'type': type,
       };
     } catch (e) {
-      print('OfflineFirstRepo: Error saving attachment locally - $e');
+      debugPrint('OfflineFirstRepo: Error saving attachment locally - $e');
       throw Exception('Failed to save attachment locally: $e');
     }
   }
