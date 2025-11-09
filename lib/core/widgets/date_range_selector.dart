@@ -25,11 +25,9 @@ class _DateRangeSelectorState extends State<DateRangeSelector> {
   void initState() {
     super.initState();
     final now = DateTime.now();
-    _currentRange = widget.initialRange ??
-        DateTimeRange(
-          start: DateTime(now.year, now.month, 1),
-          end: now,
-        );
+    _currentRange =
+        widget.initialRange ??
+        DateTimeRange(start: DateTime(now.year, now.month, 1), end: now);
   }
 
   @override
@@ -44,8 +42,8 @@ class _DateRangeSelectorState extends State<DateRangeSelector> {
         _CustomRangeSelector(
           range: _currentRange,
           onStartDatePressed: () => _selectDate(true),
-            onEndDatePressed: () => _selectDate(false),
-            onRangePressed: _selectRange,
+          onEndDatePressed: () => _selectDate(false),
+          onRangePressed: _selectRange,
         ),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -54,9 +52,9 @@ class _DateRangeSelectorState extends State<DateRangeSelector> {
               // Preset buttons
               ...presets.map((label) {
                 return _PresetButton(
-                    label: label,
-                    onPressed: () => _handlePresetSelection(label, now),
-                    selected: _selectedPreset == label,
+                  label: label,
+                  onPressed: () => _handlePresetSelection(label, now),
+                  selected: _selectedPreset == label,
                 );
               }),
             ],
@@ -68,14 +66,15 @@ class _DateRangeSelectorState extends State<DateRangeSelector> {
 
   void _handlePresetSelection(String label, DateTime now) {
     setState(() => _selectedPreset = label);
-    
+
     DateTimeRange newRange;
 
-    
-    
     switch (label) {
       case 'Today':
-        newRange = DateTimeRange(start: DateTime(now.year, now.month, now.day), end: now);
+        newRange = DateTimeRange(
+          start: DateTime(now.year, now.month, now.day),
+          end: now,
+        );
         break;
       case 'This Week':
         final startOfWeek = now.subtract(Duration(days: now.weekday));
@@ -103,10 +102,7 @@ class _DateRangeSelectorState extends State<DateRangeSelector> {
         );
         break;
       case 'This Year':
-        newRange = DateTimeRange(
-          start: DateTime(now.year, 1, 1),
-          end: now,
-        );
+        newRange = DateTimeRange(start: DateTime(now.year, 1, 1), end: now);
         break;
       default:
         return;
@@ -120,14 +116,25 @@ class _DateRangeSelectorState extends State<DateRangeSelector> {
     final picked = await showDatePicker(
       context: context,
       initialDate: isStart ? _currentRange.start : _currentRange.end,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
+      firstDate: isStart ? DateTime(2000) : _currentRange.start,
+      lastDate: isStart ? _currentRange.end : DateTime.now(),
     );
 
     if (picked != null && mounted) {
       final newRange = isStart
           ? DateTimeRange(start: picked, end: _currentRange.end)
-          : DateTimeRange(start: _currentRange.start, end: DateTime(picked.year, picked.month, picked.day, 23, 59, 59, 999));
+          : DateTimeRange(
+              start: _currentRange.start,
+              end: DateTime(
+                picked.year,
+                picked.month,
+                picked.day,
+                23,
+                59,
+                59,
+                999,
+              ),
+            );
       _updateRange(newRange);
     }
   }
@@ -142,8 +149,20 @@ class _DateRangeSelectorState extends State<DateRangeSelector> {
 
     if (picked != null && mounted) {
       final adjustedRange = DateTimeRange(
-        start: DateTime(picked.start.year, picked.start.month, picked.start.day),
-        end: DateTime(picked.end.year, picked.end.month, picked.end.day, 23, 59, 59, 999),
+        start: DateTime(
+          picked.start.year,
+          picked.start.month,
+          picked.start.day,
+        ),
+        end: DateTime(
+          picked.end.year,
+          picked.end.month,
+          picked.end.day,
+          23,
+          59,
+          59,
+          999,
+        ),
       );
       _updateRange(adjustedRange);
     }
@@ -196,13 +215,8 @@ class _PresetButton extends StatelessWidget {
         selectedColor: theme.colorScheme.primary,
         backgroundColor: theme.colorScheme.surface,
         showCheckmark: false,
-        side: BorderSide(
-          color: theme.colorScheme.outline,
-          width: 1,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        side: BorderSide(color: theme.colorScheme.outline, width: 1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       ),
     );
