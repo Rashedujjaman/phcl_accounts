@@ -54,6 +54,7 @@ import 'package:phcl_accounts/core/widgets/date_range_selector.dart';
 import 'package:phcl_accounts/features/transactions/presentation/widgets/transaction_details_sheet.dart';
 import 'package:phcl_accounts/features/transactions/presentation/widgets/transaction_item.dart';
 import 'package:phcl_accounts/features/transactions/presentation/pages/add_transaction_page.dart';
+import 'package:phcl_accounts/core/services/connectivity_service.dart';
 
 /// A comprehensive transactions management page that provides full CRUD operations,
 /// advanced filtering, and real-time search capabilities for financial transactions.
@@ -122,6 +123,9 @@ class _TransactionsPageState extends State<TransactionsPage> {
   /// When true, search bar slides down with animation.
   bool _isSearchVisible = false;
 
+  // Check connectivity
+  bool _isOnline = false;
+
   /// Initializes the widget state and sets up initial data loading.
   ///
   /// - Loads transactions for the current month by default
@@ -132,6 +136,13 @@ class _TransactionsPageState extends State<TransactionsPage> {
     super.initState();
     _loadInitialTransactions();
     _searchController.addListener(_onSearchChanged);
+    ConnectivityService().checkConnection().then((status) {
+      if (mounted) {
+        setState(() {
+          _isOnline = status;
+        });
+      }
+    });
   }
 
   /// Cleans up resources when widget is disposed.
@@ -344,6 +355,9 @@ class _TransactionsPageState extends State<TransactionsPage> {
                     transactions = _filterTransactions(transactions);
 
                     if (transactions.isEmpty) {
+                      if (_isOnline == false) {
+                        return _buildNoInternetState();
+                      }
                       return _buildEmptyState();
                     }
 
@@ -498,6 +512,48 @@ class _TransactionsPageState extends State<TransactionsPage> {
               label: const Text('Clear search'),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  /// Builds the no internet state widget with context-aware messaging.
+  ///
+  /// Displays different content based on whether the user is actively searching
+  /// or viewing an empty transaction list:
+  ///
+  /// The widget provides visual feedback and actionable next steps to guide
+  /// user behavior in both scenarios.
+  ///
+  /// Returns:
+  /// - Centered column with icon, message, and optional action button
+  Widget _buildNoInternetState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.wifi_off,
+            size: 64,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'No internet connection',
+            style: TextStyle(
+              fontSize: 18,
+              color: Theme.of(context).colorScheme.onSurface,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Please check your internet connection and try again.',
+            style: TextStyle(
+              fontSize: 14,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
         ],
       ),
     );
